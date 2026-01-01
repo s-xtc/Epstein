@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Simple Chat</title>
+<script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
+</head>
+<body>
+<h2>Simple Chat</h2>
+<ul id="messages"></ul>
+<input id="msgInput" placeholder="Type a message">
+<button onclick="sendMsg()">Send</button>
+
+<script>
+const socket = io('https://flappier-daleyza-condescending.ngrok-free.dev'); // <- replace with your ngrok URL
+
+socket.on('chat message', msg => {
+  const li = document.createElement('li');
+  li.textContent = msg.user + ': ' + msg.msg;
+  document.getElementById('messages').appendChild(li);
+});
+
+function sendMsg() {
+  const msg = document.getElementById('msgInput').value;
+  if(msg) {
+    socket.emit('chat message', { user: 'User', msg });
+    document.getElementById('msgInput').value = '';
+  }
+}
+</script>
+</body>
+</html>
