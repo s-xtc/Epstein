@@ -1,18 +1,223 @@
-<script src="https://cdn.socket.io/4.7.1/socket.io.min.js"></script>
-<script>
-const socket = io('https://flappier-daleyza-condescending.ngrok-free.dev');
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Chat</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        #chat-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        
+        #chat {
+            height: 400px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            overflow-y: auto;
+            background: #fafafa;
+        }
+        
+        .message {
+            margin: 8px 0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        
+        .received {
+            background: #e3f2fd;
+            align-self: flex-start;
+        }
+        
+        .sent {
+            background: #dcf8c6;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        
+        #message-input {
+            width: 70%;
+            padding: 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+        }
+        
+        #message-input:focus {
+            border-color: #4CAF50;
+        }
+        
+        #send-button {
+            width: 25%;
+            padding: 12px;
+            font-size: 16px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        
+        #send-button:hover {
+            background: #45a049;
+        }
+        
+        #status {
+            text-align: center;
+            padding: 10px;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .connected { color: #4CAF50; }
+        .disconnected { color: #f44336; }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <h1>💬 Simple Chat</h1>
+        
+        <div id="status">
+            <span id="status-text">Connecting to server...</span>
+        </div>
+        
+        <div id="chat"></div>
+        
+        <div style="display: flex; margin-top: 10px;">
+            <input type="text" 
+                   id="message-input" 
+                   placeholder="Type your message here..."
+                   autocomplete="off">
+            <button id="send-button">Send</button>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+            Connected to: <span id="server-ip">92.5.84.244:8765</span>
+        </div>
+    </div>
 
-socket.on('chat message', msg => {
-  const li = document.createElement('li');
-  li.textContent = msg.user + ': ' + msg.msg;
-  document.getElementById('messages').appendChild(li);
-});
-
-function sendMsg() {
-  const msg = document.getElementById('msgInput').value;
-  if(msg) {
-    socket.emit('chat message', { user: 'User', msg });
-    document.getElementById('msgInput').value = '';
-  }
-}
-</script>
+    <script>
+        // ===== CONFIGURATION =====
+        const SERVER_IP = "92.5.84.244";  // Your server IP
+        const SERVER_PORT = 8765;
+        const WS_URL = `ws://${SERVER_IP}:${SERVER_PORT}`;
+        
+        // ===== ELEMENTS =====
+        const statusText = document.getElementById('status-text');
+        const chatDiv = document.getElementById('chat');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const serverIpSpan = document.getElementById('server-ip');
+        
+        // ===== WEBSOCKET SETUP =====
+        let ws = null;
+        let username = `User${Math.floor(Math.random() * 1000)}`;
+        
+        function connectWebSocket() {
+            statusText.textContent = "Connecting...";
+            statusText.className = "";
+            
+            ws = new WebSocket(WS_URL);
+            serverIpSpan.textContent = `${SERVER_IP}:${SERVER_PORT}`;
+            
+            ws.onopen = function() {
+                statusText.textContent = "✅ Connected to chat server";
+                statusText.className = "connected";
+                addSystemMessage("You joined the chat as " + username);
+            };
+            
+            ws.onmessage = function(event) {
+                addReceivedMessage(event.data);
+            };
+            
+            ws.onerror = function(error) {
+                statusText.textContent = "❌ Connection error";
+                statusText.className = "disconnected";
+                console.error("WebSocket error:", error);
+            };
+            
+            ws.onclose = function() {
+                statusText.textContent = "❌ Disconnected - Trying to reconnect in 5 seconds...";
+                statusText.className = "disconnected";
+                setTimeout(connectWebSocket, 5000);
+            };
+        }
+        
+        // ===== MESSAGE FUNCTIONS =====
+        function addSystemMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.style.cssText = 'background: #ffeb3b; color: #333; text-align: center; margin: 10px auto; width: 90%;';
+            messageDiv.textContent = `📢 ${text}`;
+            chatDiv.appendChild(messageDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        
+        function addSentMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message sent';
+            messageDiv.textContent = `You: ${text}`;
+            chatDiv.appendChild(messageDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        
+        function addReceivedMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message received';
+            messageDiv.textContent = text;
+            chatDiv.appendChild(messageDiv);
+            chatDiv.scrollTop = chatDiv.scrollHeight;
+        }
+        
+        // ===== SEND MESSAGE =====
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                // Add timestamp and username to message
+                const fullMessage = `${username}: ${message}`;
+                ws.send(fullMessage);
+                addSentMessage(message);
+                messageInput.value = '';
+            } else {
+                addSystemMessage("Cannot send - not connected to server");
+            }
+        }
+        
+        // ===== EVENT LISTENERS =====
+        sendButton.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // ===== INITIALIZE =====
+        connectWebSocket();
+        
+        // Auto-focus input
+        messageInput.focus();
+    </script>
+</body>
+</html>
