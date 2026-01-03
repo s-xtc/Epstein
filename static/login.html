@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  }
+  .container {
+    background: white;
+    padding: 40px;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    width: 100%;
+    max-width: 400px;
+  }
+  h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+  }
+  .form-group {
+    margin-bottom: 15px;
+  }
+  label {
+    display: block;
+    margin-bottom: 5px;
+    color: #555;
+    font-weight: bold;
+  }
+  input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    box-sizing: border-box;
+  }
+  input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 5px rgba(102, 126, 234, 0.5);
+  }
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+  }
+  button {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s;
+  }
+  .btn-login {
+    background: #667eea;
+    color: white;
+  }
+  .btn-login:hover {
+    background: #5568d3;
+  }
+  .btn-register {
+    background: #764ba2;
+    color: white;
+  }
+  .btn-register:hover {
+    background: #653a8f;
+  }
+  .message {
+    margin-top: 15px;
+    padding: 10px;
+    border-radius: 4px;
+    text-align: center;
+    display: none;
+  }
+  .message.error {
+    background: #ffebee;
+    color: #c62828;
+    display: block;
+  }
+  .message.success {
+    background: #e8f5e9;
+    color: #2e7d32;
+    display: block;
+  }
+  .loading {
+    display: none;
+    text-align: center;
+    margin-top: 10px;
+  }
+  .spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Chat App</h1>
+  <div class="form-group">
+    <label for="username">Username</label>
+    <input id="username" type="text" placeholder="Enter username" />
+  </div>
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input id="password" type="password" placeholder="Enter password" />
+  </div>
+  <div class="button-group">
+    <button class="btn-login" onclick="login()">Login</button>
+    <button class="btn-register" onclick="register()">Register</button>
+  </div>
+  <div id="message" class="message"></div>
+  <div class="loading">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<script>
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const messageEl = document.getElementById('message');
+const loadingEl = document.querySelector('.loading');
+
+// If token exists, go to chat
+if (localStorage.getItem('token')) {
+  window.location.href = '/chat.html';
+}
+
+function showMessage(text, isError = false) {
+  messageEl.textContent = text;
+  messageEl.className = 'message ' + (isError ? 'error' : 'success');
+  loadingEl.style.display = 'none';
+}
+
+function showLoading() {
+  loadingEl.style.display = 'block';
+  messageEl.className = 'message';
+}
+
+async function register() {
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+  
+  if (!username || !password) {
+    showMessage('Please enter username and password', true);
+    return;
+  }
+  
+  showLoading();
+  
+  try {
+    const res = await fetch('/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    
+    if (!res.ok) {
+      let errMsg = 'Registration failed';
+      try {
+        const err = await res.json();
+        errMsg = err.detail || errMsg;
+      } catch (e) {
+        errMsg = `Server error: ${res.status}`;
+      }
+      showMessage(errMsg, true);
+      return;
+    }
+    
+    const data = await res.json();
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('username', username);
+    showMessage('Registration successful! Redirecting...');
+    setTimeout(() => {
+      window.location.href = '/chat.html';
+    }, 1000);
+  } catch (e) {
+    showMessage('Connection error: ' + e.message, true);
+  }
+}
+
+async function login() {
+  const username = usernameInput.value.trim();
+  const password = passwordInput.value;
+  
+  if (!username || !password) {
+    showMessage('Please enter username and password', true);
+    return;
+  }
+  
+  showLoading();
+  
+  try {
+    const res = await fetch('/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    
+    if (!res.ok) {
+      let errMsg = 'Login failed';
+      try {
+        const err = await res.json();
+        errMsg = err.detail || errMsg;
+      } catch (e) {
+        errMsg = `Server error: ${res.status}`;
+      }
+      showMessage(errMsg, true);
+      return;
+    }
+    
+    const data = await res.json();
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('username', username);
+    showMessage('Login successful! Redirecting...');
+    setTimeout(() => {
+      window.location.href = '/chat.html';
+    }, 1000);
+  } catch (e) {
+    showMessage('Connection error: ' + e.message, true);
+  }
+}
+
+// Allow Enter key
+[usernameInput, passwordInput].forEach(el => {
+  el.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+      if (document.activeElement === usernameInput) {
+        passwordInput.focus();
+      } else {
+        login();
+      }
+    }
+  });
+});
+</script>
+</body>
+</html>
