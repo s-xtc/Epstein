@@ -174,8 +174,14 @@ async function register() {
     });
     
     if (!res.ok) {
-      const err = await res.json();
-      showMessage(err.detail || 'Registration failed', true);
+      let errMsg = 'Registration failed';
+      try {
+        const err = await res.json();
+        errMsg = err.detail || errMsg;
+      } catch (e) {
+        errMsg = `Server error: ${res.status}`;
+      }
+      showMessage(errMsg, true);
       return;
     }
     
@@ -210,8 +216,14 @@ async function login() {
     });
     
     if (!res.ok) {
-      const err = await res.json();
-      showMessage(err.detail || 'Login failed', true);
+      let errMsg = 'Login failed';
+      try {
+        const err = await res.json();
+        errMsg = err.detail || errMsg;
+      } catch (e) {
+        errMsg = `Server error: ${res.status}`;
+      }
+      showMessage(errMsg, true);
       return;
     }
     

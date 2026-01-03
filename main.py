@@ -1,6 +1,7 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, status
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from database import messages, users
 from pydantic import BaseModel
 from jose import JWTError, jwt
@@ -183,7 +184,6 @@ async def broadcast_event(event_type: str, data: dict):
 # Serve static files AFTER defining API routes
 @app.get("/")
 async def root():
-    from fastapi.responses import FileResponse
     return FileResponse("static/login.html")
 
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
