@@ -15,9 +15,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Serve the static front-end
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
-
 # Track connected clients
 connected_clients = set()
 
@@ -62,3 +59,7 @@ async def websocket_endpoint(ws: WebSocket):
                     pass
     except WebSocketDisconnect:
         connected_clients.discard(ws)
+
+
+# Serve static files AFTER defining API routes
+app.mount("/", StaticFiles(directory="static", html=True), name="static")
