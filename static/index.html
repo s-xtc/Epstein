@@ -29,17 +29,19 @@
 </div>
 
 <div class="input-area">
-  <input id="username" placeholder="Set username..." />
-  <button onclick="setUsername()">Set Name</button>
+  <input id="username" placeholder="Username" />
+  <input id="password" type="password" placeholder="Password" />
+  <button onclick="register()">Register</button>
+  <button onclick="login()">Login</button>
 </div>
 
 <ul id="chat"></ul>
 
 <div class="input-area">
-  <input id="msg" placeholder="Type a message..." />
-  <button onclick="send()">Send</button>
+  <input id="msg" placeholder="Type a message..." disabled />
+  <button id="sendBtn" onclick="send()" disabled>Send</button>
 </div>
-<div class="status" id="status">Connecting...</div>
+<div class="status" id="status">Not connected</div>
 
 <script>
 const chat = document.getElementById('chat');
@@ -51,11 +53,14 @@ const currentUserEl = document.getElementById('current-user');
 
 let currentUsername = 'Anonymous';
 let typingTimeout = null;
+let ws = null;
 
 const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
-const ws = new WebSocket(`${wsProtocol}://${location.host}/ws`);
 
-ws.onmessage = e => {
+function connectWS(token) {
+  ws = new WebSocket(`${wsProtocol}://${location.host}/ws?token=${encodeURIComponent(token)}`);
+
+  ws.onmessage = e => {
   try {
     const data = JSON.parse(e.data);
     const type = data.type;
@@ -78,23 +83,28 @@ ws.onmessage = e => {
     console.error('Error parsing message:', err);
   }
 };
+  ws.onopen = () => {
+    statusEl.textContent = '✓ Connected';
+    statusEl.style.color = '#4caf50';
+    msg.disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    currentUserEl.textContent = currentUsername;
+    loadMessages();
+  };
 
-ws.onopen = () => {
-  statusEl.textContent = '✓ Connected';
-  statusEl.style.color = '#4caf50';
-  loadMessages();
-};
+  ws.onclose = () => {
+    statusEl.textContent = '✗ Disconnected';
+    statusEl.style.color = '#f44336';
+    msg.disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+  };
 
-ws.onclose = () => {
-  statusEl.textContent = '✗ Disconnected';
-  statusEl.style.color = '#f44336';
-};
-
-ws.onerror = (e) => {
-  console.error('WebSocket error:', e);
-  statusEl.textContent = '✗ Connection error';
-  statusEl.style.color = '#f44336';
-};
+  ws.onerror = (e) => {
+    console.error('WebSocket error:', e);
+    statusEl.textContent = '✗ Connection error';
+    statusEl.style.color = '#f44336';
+  };
+}
 
 function addMessage(user, text, timestamp) {
   const li = document.createElement('li');
@@ -141,6 +151,7 @@ async function loadMessages() {
 
 function setUsername() {
   const newName = username.value.trim() || 'Anonymous';
+  if (!ws) return alert('Not connected');
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'set_username', content: newName }));
     currentUsername = newName;
@@ -181,6 +192,42 @@ msg.addEventListener('keypress', (e) => {
 username.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') setUsername();
 });
+
+// Auth actions
+async function register() {
+  const user = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value;
+  if (!user || !pw) return alert('Enter username and password');
+  const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user, password: pw }) });
+  if (!res.ok) return alert('Registration failed');
+  const data = await res.json();
+  localStorage.setItem('token', data.access_token);
+  currentUsername = user;
+  connectWS(data.access_token);
+}
+
+async function login() {
+  const user = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value;
+  if (!user || !pw) return alert('Enter username and password');
+  const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user, password: pw }) });
+  if (!res.ok) return alert('Login failed');
+  const data = await res.json();
+  localStorage.setItem('token', data.access_token);
+  currentUsername = user;
+  connectWS(data.access_token);
+}
+
+// Auto-connect if token exists
+const saved = localStorage.getItem('token');
+if (saved) {
+  // try decode username from token for UI (best effort)
+  try {
+    const payload = JSON.parse(atob(saved.split('.')[1]));
+    if (payload && payload.sub) currentUsername = payload.sub;
+  } catch (e) {}
+  connectWS(saved);
+}
 </script>
 </body>
 </html>
