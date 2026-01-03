@@ -5,7 +5,8 @@
   body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 10px; }
   .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
   .header h2 { margin: 0; }
-  .user-info { font-size: 0.9em; color: #666; }
+  .user-info { display: flex; align-items: center; gap: 10px; font-size: 0.9em; color: #666; }
+  .pfp-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; border: 2px solid #007; cursor: pointer; }
   #chat { border: 1px solid #ccc; height: 350px; overflow-y: auto; padding: 10px; margin: 10px 0; background: #fafafa; }
   li { margin: 5px 0; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007; }
   .username { font-weight: bold; color: #007; }
@@ -21,14 +22,32 @@
   .status { font-size: 0.85em; margin-top: 5px; }
   .status.error { color: #f44336; }
   .status.ok { color: #4caf50; }
+  /* Profile modal */
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
+  .modal.active { display: flex; align-items: center; justify-content: center; }
+  .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; }
+  .modal-header { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
+  .form-group { margin-bottom: 15px; }
+  .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+  .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+  .form-group input[type="file"] { padding: 5px; }
+  .preview-pfp { width: 80px; height: 80px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; margin: 10px auto; border: 2px solid #007; }
+  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-buttons button { margin: 0; }
+  .btn-cancel { background: #999; }
+  .btn-cancel:hover { background: #777; }
 </style>
 </head>
 <body>
 <div class="header">
   <h2>Chat Room</h2>
   <div class="user-info">
-    Online: <span id="count">0</span> | You: <span id="current-user">Loading...</span>
-    <button class="logout-btn" onclick="logout()">Logout</button>
+    <span id="pfp-avatar" class="pfp-avatar" onclick="openProfileModal()"></span>
+    <div>
+      Online: <span id="count">0</span> | You: <span id="current-user">Loading...</span><br />
+      <button style="padding: 2px 8px; font-size: 0.8em;" onclick="openProfileModal()">Edit Profile</button>
+      <button class="logout-btn" style="padding: 2px 8px; font-size: 0.8em;" onclick="logout()">Logout</button>
+    </div>
   </div>
 </div>
 
@@ -40,27 +59,57 @@
 </div>
 <div class="status" id="status">Connecting...</div>
 
+<!-- Profile Modal -->
+<div id="profileModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">Edit Profile</div>
+    <div class="preview-pfp" id="previewPfp"></div>
+    
+    <div class="form-group">
+      <label for="editUsername">Username</label>
+      <input id="editUsername" type="text" placeholder="Enter new username" />
+    </div>
+    
+    <div class="form-group">
+      <label for="editPfp">Profile Picture (PNG/JPG)</label>
+      <input id="editPfp" type="file" accept="image/*" onchange="previewImage()" />
+    </div>
+    
+    <div class="modal-buttons">
+      <button class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
+      <button onclick="saveProfile()">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const chat = document.getElementById('chat');
 const msg = document.getElementById('msg');
 const statusEl = document.getElementById('status');
 const countEl = document.getElementById('count');
 const currentUserEl = document.getElementById('current-user');
+const pfpAvatarEl = document.getElementById('pfp-avatar');
 
 let currentUsername = 'Anonymous';
+let currentPfp = '';
 let typingTimeout = null;
 let ws = null;
 
 // Check auth
 const token = localStorage.getItem('token');
 const savedUsername = localStorage.getItem('username');
+const savedPfp = localStorage.getItem('pfp');
 
 if (!token) {
   window.location.href = '/login.html';
 }
 
 currentUsername = savedUsername || 'Anonymous';
+currentPfp = savedPfp || '';
 currentUserEl.textContent = currentUsername;
+if (currentPfp) {
+  pfpAvatarEl.style.backgroundImage = `url('${currentPfp}')`;
+}
 
 const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
 
@@ -198,6 +247,91 @@ msg.addEventListener('input', () => {
 msg.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send();
 });
+
+// Profile management
+function openProfileModal() {
+  const modal = document.getElementById('profileModal');
+  modal.classList.add('active');
+  document.getElementById('editUsername').value = currentUsername;
+  const preview = document.getElementById('previewPfp');
+  if (currentPfp) {
+    preview.style.backgroundImage = `url('${currentPfp}')`;
+  } else {
+    preview.style.background = '#ddd';
+  }
+}
+
+function closeProfileModal() {
+  document.getElementById('profileModal').classList.remove('active');
+  document.getElementById('editPfp').value = '';
+}
+
+function previewImage() {
+  const fileInput = document.getElementById('editPfp');
+  const preview = document.getElementById('previewPfp');
+  const file = fileInput.files[0];
+  
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      preview.style.backgroundImage = `url('${e.target.result}')`;
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function saveProfile() {
+  const newUsername = document.getElementById('editUsername').value.trim();
+  const fileInput = document.getElementById('editPfp');
+  let pfpData = currentPfp;
+  
+  if (fileInput.files[0]) {
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      pfpData = e.target.result;
+      await doSaveProfile(newUsername, pfpData);
+    };
+    reader.readAsDataURL(fileInput.files[0]);
+  } else {
+    await doSaveProfile(newUsername, pfpData);
+  }
+}
+
+async function doSaveProfile(newUsername, pfpData) {
+  try {
+    const res = await fetch('/profile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, username: newUsername || null, pfp: pfpData || null })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      alert('Error: ' + (err.detail || 'Failed to update profile'));
+      return;
+    }
+    
+    const data = await res.json();
+    
+    // Update local storage
+    localStorage.setItem('token', data.access_token);
+    localStorage.setItem('username', data.username);
+    if (data.pfp) localStorage.setItem('pfp', data.pfp);
+    
+    // Update UI
+    currentUsername = data.username;
+    currentPfp = data.pfp || '';
+    currentUserEl.textContent = currentUsername;
+    if (currentPfp) {
+      pfpAvatarEl.style.backgroundImage = `url('${currentPfp}')`;
+    }
+    
+    closeProfileModal();
+    alert('Profile updated successfully!');
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
 
 function logout() {
   localStorage.removeItem('token');

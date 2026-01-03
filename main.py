@@ -91,6 +91,66 @@ async def login(u: UserCreate):
     return {"access_token": access_token, "token_type": "bearer"}
 
 
+@app.get("/profile")
+async def get_profile(token: str):
+    """Get user profile data."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {
+        "username": user.get("username"),
+        "pfp": user.get("pfp", ""),
+    }
+
+
+@app.post("/profile")
+async def update_profile(token: str, username: str = None, pfp: str = None):
+    """Update user profile (username and/or pfp)."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        old_username = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = users.find_one({"username": old_username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    updates = {}
+    if username and username != old_username:
+        # Check if new username exists
+        if users.find_one({"username": username}):
+            raise HTTPException(status_code=400, detail="Username already taken")
+        updates["username"] = username
+    
+    if pfp:
+        # Limit pfp size to 500KB
+        if len(pfp) > 500000:
+            raise HTTPException(status_code=400, detail="Image too large")
+        updates["pfp"] = pfp
+    
+    if updates:
+        users.update_one({"username": old_username}, {"$set": updates})
+    
+    # Generate new token if username changed
+    new_username = updates.get("username", old_username)
+    new_token = create_access_token({"sub": new_username})
+    
+    return {
+        "access_token": new_token,
+        "token_type": "bearer",
+        "username": new_username,
+        "pfp": updates.get("pfp", user.get("pfp", "")),
+    }
+
+
 @app.get("/messages")
 async def get_messages(limit: int = 50):
     """Return the most recent `limit` messages (oldest first)."""
