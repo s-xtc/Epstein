@@ -2,229 +2,46 @@
 <html>
 <head>
 <style>
-  /* Reset and base styles */
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  
-  body { 
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-    background: #0a0a0a; 
-    color: #e0e0e0; 
-    max-width: 800px; 
-    margin: 0 auto; 
-    padding: 20px; 
-    line-height: 1.4;
-  }
-  
-  /* Header */
-  .header { 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    padding-bottom: 20px; 
-    border-bottom: 1px solid #222; 
-    margin-bottom: 20px; 
-  }
-  
-  .header h2 { 
-    font-weight: 400; 
-    font-size: 1.5em; 
-    letter-spacing: -0.5px; 
-    color: #fff; 
-  }
-  
-  .user-info { 
-    font-size: 0.9em; 
-    color: #888; 
-    display: flex; 
-    align-items: center; 
-    gap: 15px; 
-  }
-  
-  /* Chat container */
-  #chat { 
-    height: 500px; 
-    overflow-y: auto; 
-    padding: 15px; 
-    margin: 0 0 20px 0; 
-    background: #111; 
-    border: 1px solid #222; 
-    display: flex; 
-    flex-direction: column; 
-    gap: 8px; 
-  }
-  
-  /* Message styling */
-  #chat li { 
-    list-style: none; 
-    padding: 12px 15px; 
-    background: #1a1a1a; 
-    border-left: 3px solid #333; 
-    position: relative; 
-  }
-  
-  .username { 
-    font-weight: 500; 
-    color: #fff; 
-    margin-right: 8px; 
-    font-size: 0.95em; 
-  }
-  
-  .timestamp { 
-    font-size: 0.75em; 
-    color: #666; 
-    position: absolute; 
-    right: 15px; 
-    top: 12px; 
-  }
-  
-  .typing { 
-    font-style: italic; 
-    color: #666; 
-    padding: 8px 15px; 
-    background: transparent; 
-    border-left: 3px solid #444; 
-  }
-  
-  .event { 
-    background: #0f2a1a; 
-    border-left-color: #2a8b5e; 
-    color: #8bcbab; 
-    font-size: 0.85em; 
-    padding: 10px 15px; 
-  }
-  
-  /* Input area */
-  .input-area { 
-    display: flex; 
-    gap: 10px; 
-    margin-bottom: 10px; 
-  }
-  
-  #msg { 
-    flex: 1; 
-    padding: 12px 15px; 
-    background: #111; 
-    border: 1px solid #222; 
-    color: #fff; 
-    font-size: 0.95em; 
-    outline: none; 
-  }
-  
-  #msg:focus { 
-    border-color: #333; 
-  }
-  
-  /* Buttons */
-  button { 
-    padding: 12px 24px; 
-    background: #222; 
-    color: #fff; 
-    border: none; 
-    font-size: 0.9em; 
-    cursor: pointer; 
-    transition: all 0.2s; 
-    letter-spacing: 0.3px; 
-  }
-  
-  button:hover { 
-    background: #2a2a2a; 
-  }
-  
-  #sendBtn { 
-    background: #1a4a7a; 
-    min-width: 80px; 
-  }
-  
-  #sendBtn:hover { 
-    background: #225a92; 
-  }
-  
-  .logout-btn { 
-    background: #4a1a1a; 
-    padding: 8px 16px; 
-    font-size: 0.85em; 
-  }
-  
-  .logout-btn:hover { 
-    background: #5a2222; 
-  }
-  
-  /* Status indicator */
-  .status { 
-    font-size: 0.85em; 
-    color: #666; 
-    padding: 8px 0; 
-    text-align: center; 
-    border-top: 1px solid #222; 
-    margin-top: 20px; 
-  }
-  
-  /* Scrollbar styling */
-  #chat::-webkit-scrollbar {
-    width: 6px;
-  }
-  
-  #chat::-webkit-scrollbar-track {
-    background: #0a0a0a;
-  }
-  
-  #chat::-webkit-scrollbar-thumb {
-    background: #333;
-  }
-  
-  /* Connection status colors */
-  .status.connected { color: #2a8b5e; }
-  .status.disconnected { color: #8b2a2a; }
-  .status.error { color: #8b5e2a; }
-  
-  /* Online counter */
-  #count { 
-    color: #2a8b5e; 
-    font-weight: 500; 
-  }
-  
-  /* Current user display */
-  #current-user { 
-    color: #4a8bca; 
-    font-weight: 500; 
-  }
-  
-  /* Message highlight for own messages */
-  #chat li.own-message {
-    border-left-color: #1a4a7a;
-    background: #151f29;
-  }
-  
-  /* Input focus state */
-  #msg:disabled {
-    background: #0a0a0a;
-    color: #444;
-    cursor: not-allowed;
-  }
+  body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 10px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .header h2 { margin: 0; }
+  .user-info { font-size: 0.9em; color: #666; }
+  #chat { border: 1px solid #ccc; height: 350px; overflow-y: auto; padding: 10px; margin: 10px 0; background: #fafafa; }
+  li { margin: 5px 0; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007; }
+  .username { font-weight: bold; color: #007; }
+  .timestamp { font-size: 0.75em; color: #999; margin-left: 10px; }
+  .typing { font-style: italic; color: #aaa; }
+  .event { background: #e8f5e9; border-left-color: #4caf50; font-size: 0.9em; color: #555; }
+  .input-area { display: flex; gap: 5px; margin-bottom: 10px; }
+  #msg { flex: 1; padding: 5px; }
+  button { padding: 5px 15px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  button:hover { background: #005; }
+  .logout-btn { background: #d32f2f; padding: 5px 10px; font-size: 0.9em; }
+  .logout-btn:hover { background: #b71c1c; }
+  .status { font-size: 0.85em; color: #ccc; margin-top: 5px; }
 </style>
 </head>
 <body>
 <div class="header">
-  <h2>CHAT</h2>
+  <h2>Chat Room</h2>
   <div class="user-info">
-    <span>ONLINE: <span id="count">0</span></span>
-    <span>|</span>
-    <span>YOU: <span id="current-user">Loading...</span></span>
-    <button class="logout-btn" onclick="logout()">LOGOUT</button>
+    Online: <span id="count">0</span> | You: <span id="current-user">Loading...</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </div>
 
 <ul id="chat"></ul>
 
 <div class="input-area">
-  <input id="msg" placeholder="Type message..." disabled />
-  <button id="sendBtn" onclick="send()" disabled>SEND</button>
+  <input id="msg" placeholder="Type a message..." disabled />
+  <button id="sendBtn" onclick="send()" disabled>Send</button>
 </div>
 <div class="status" id="status">Connecting...</div>
 
 <script>
 const chat = document.getElementById('chat');
 const msg = document.getElementById('msg');
+const username = document.getElementById('username');
 const statusEl = document.getElementById('status');
 const countEl = document.getElementById('count');
 const currentUserEl = document.getElementById('current-user');
@@ -239,32 +56,31 @@ function connectWS(token) {
   ws = new WebSocket(`${wsProtocol}://${location.host}/ws?token=${encodeURIComponent(token)}`);
 
   ws.onmessage = e => {
-    try {
-      const data = JSON.parse(e.data);
-      const type = data.type;
-      const info = data.data;
+  try {
+    const data = JSON.parse(e.data);
+    const type = data.type;
+    const info = data.data;
 
-      if (type === 'message') {
-        addMessage(info.username, info.text, info.timestamp);
-      } else if (type === 'user_typing') {
-        showTyping(info.username);
-      } else if (type === 'user_joined') {
-        addEvent(`${info.username} joined`);
-        countEl.textContent = info.count;
-      } else if (type === 'user_left') {
-        addEvent(`${info.username} left`);
-        countEl.textContent = info.count;
-      } else if (type === 'username_changed') {
-        addEvent(`${info.old} → ${info.new}`);
-      }
-    } catch (err) {
-      console.error('Error parsing message:', err);
+    if (type === 'message') {
+      addMessage(info.username, info.text, info.timestamp);
+    } else if (type === 'user_typing') {
+      showTyping(info.username);
+    } else if (type === 'user_joined') {
+      addEvent(`${info.username} joined the chat`);
+      countEl.textContent = info.count;
+    } else if (type === 'user_left') {
+      addEvent(`${info.username} left the chat`);
+      countEl.textContent = info.count;
+    } else if (type === 'username_changed') {
+      addEvent(`${info.old} is now ${info.new}`);
     }
-  };
-
+  } catch (err) {
+    console.error('Error parsing message:', err);
+  }
+};
   ws.onopen = () => {
-    statusEl.textContent = 'Connected';
-    statusEl.className = 'status connected';
+    statusEl.textContent = '✓ Connected';
+    statusEl.style.color = '#4caf50';
     msg.disabled = false;
     document.getElementById('sendBtn').disabled = false;
     currentUserEl.textContent = currentUsername;
@@ -272,29 +88,23 @@ function connectWS(token) {
   };
 
   ws.onclose = () => {
-    statusEl.textContent = 'Disconnected';
-    statusEl.className = 'status disconnected';
+    statusEl.textContent = '✗ Disconnected';
+    statusEl.style.color = '#f44336';
     msg.disabled = true;
     document.getElementById('sendBtn').disabled = true;
   };
 
   ws.onerror = (e) => {
     console.error('WebSocket error:', e);
-    statusEl.textContent = 'Connection error';
-    statusEl.className = 'status error';
+    statusEl.textContent = '✗ Connection error';
+    statusEl.style.color = '#f44336';
   };
 }
 
 function addMessage(user, text, timestamp) {
   const li = document.createElement('li');
-  const time = timestamp ? new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+  const time = timestamp ? new Date(timestamp).toLocaleTimeString() : '';
   li.innerHTML = `<span class="username">${user}:</span> ${text} <span class="timestamp">${time}</span>`;
-  
-  // Highlight own messages
-  if (user === currentUsername) {
-    li.classList.add('own-message');
-  }
-  
   chat.appendChild(li);
   chat.scrollTop = chat.scrollHeight;
 }
@@ -334,6 +144,17 @@ async function loadMessages() {
   }
 }
 
+function setUsername() {
+  const newName = username.value.trim() || 'Anonymous';
+  if (!ws) return alert('Not connected');
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'set_username', content: newName }));
+    currentUsername = newName;
+    currentUserEl.textContent = newName;
+    username.value = '';
+  }
+}
+
 function send() {
   if (!msg.value.trim()) {
     return;
@@ -350,7 +171,6 @@ function send() {
   if (typingTimeout) clearTimeout(typingTimeout);
 }
 
-// Typing indicator
 msg.addEventListener('input', () => {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'typing' }));
@@ -364,16 +184,16 @@ msg.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send();
 });
 
-// Auth functions
+username.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') setUsername();
+});
+
+// Auth actions
 async function register() {
-  const user = document.getElementById('username')?.value.trim();
-  const pw = document.getElementById('password')?.value;
+  const user = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value;
   if (!user || !pw) return alert('Enter username and password');
-  const res = await fetch('/register', { 
-    method: 'POST', 
-    headers: { 'Content-Type': 'application/json' }, 
-    body: JSON.stringify({ username: user, password: pw }) 
-  });
+  const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user, password: pw }) });
   if (!res.ok) return alert('Registration failed');
   const data = await res.json();
   localStorage.setItem('token', data.access_token);
@@ -382,14 +202,10 @@ async function register() {
 }
 
 async function login() {
-  const user = document.getElementById('username')?.value.trim();
-  const pw = document.getElementById('password')?.value;
+  const user = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value;
   if (!user || !pw) return alert('Enter username and password');
-  const res = await fetch('/login', { 
-    method: 'POST', 
-    headers: { 'Content-Type': 'application/json' }, 
-    body: JSON.stringify({ username: user, password: pw }) 
-  });
+  const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user, password: pw }) });
   if (!res.ok) return alert('Login failed');
   const data = await res.json();
   localStorage.setItem('token', data.access_token);
@@ -397,15 +213,10 @@ async function login() {
   connectWS(data.access_token);
 }
 
-function logout() {
-  localStorage.removeItem('token');
-  if (ws) ws.close();
-  location.reload();
-}
-
 // Auto-connect if token exists
 const saved = localStorage.getItem('token');
 if (saved) {
+  // try decode username from token for UI (best effort)
   try {
     const payload = JSON.parse(atob(saved.split('.')[1]));
     if (payload && payload.sub) currentUsername = payload.sub;
