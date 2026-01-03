@@ -181,4 +181,9 @@ async def broadcast_event(event_type: str, data: dict):
 
 
 # Serve static files AFTER defining API routes
+@app.get("/")
+async def root():
+    from fastapi.responses import FileResponse
+    return FileResponse("static/login.html")
+
 app.mount("/", StaticFiles(directory="static", html=True), name="static")
