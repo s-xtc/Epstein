@@ -2,84 +2,31 @@
 <html>
 <head>
 <style>
-  * { box-sizing: border-box; }
-  body { font-family: Arial; margin: 0; padding: 0; display: flex; height: 100vh; }
-  .sidebar { width: 300px; background: #f5f5f5; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
-  .sidebar-header { padding: 15px; border-bottom: 1px solid #ddd; }
-  .sidebar-header h3 { margin: 0 0 10px 0; }
-  .user-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .pfp-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; border: 2px solid #007; cursor: pointer; flex-shrink: 0; }
-  .user-name { font-weight: bold; flex: 1; overflow: hidden; text-overflow: ellipsis; }
-  .sidebar-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
-  .sidebar-buttons button { flex: 1; min-width: 80px; padding: 8px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
-  .sidebar-buttons button:hover { background: #005; }
-  .sidebar-buttons .logout-btn { background: #d32f2f; }
-  .sidebar-buttons .logout-btn:hover { background: #b71c1c; }
-  
-  .chat-section { flex: 1; display: flex; flex-direction: column; }
-  .chat-header { padding: 15px; border-bottom: 1px solid #ccc; background: white; }
-  .chat-header h2 { margin: 0; }
-  
-  .chats-list { flex: 1; overflow-y: auto; padding: 10px; }
-  .chat-item { padding: 10px; background: white; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007; cursor: pointer; }
-  .chat-item:hover { background: #f0f0f0; }
-  .chat-item.active { background: #e8f5e9; border-left-color: #4caf50; }
-  .chat-item-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-  .chat-item-avatar { width: 30px; height: 30px; border-radius: 50%; background: #ddd; background-size: cover; flex-shrink: 0; }
-  .chat-item-name { font-weight: bold; }
-  .chat-item-type { font-size: 0.8em; color: #999; }
-  
-  .messages-area { flex: 1; display: flex; flex-direction: column; padding: 15px; }
-  #chat { flex: 1; border: 1px solid #ccc; overflow-y: auto; padding: 10px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; }
+  body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 10px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .header h2 { margin: 0; }
+  .user-info { font-size: 0.9em; color: #666; }
+  #chat { border: 1px solid #ccc; height: 350px; overflow-y: auto; padding: 10px; margin: 10px 0; background: #fafafa; }
   li { margin: 5px 0; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007; }
   .username { font-weight: bold; color: #007; }
   .timestamp { font-size: 0.75em; color: #999; margin-left: 10px; }
   .typing { font-style: italic; color: #aaa; }
   .event { background: #e8f5e9; border-left-color: #4caf50; font-size: 0.9em; color: #555; }
-  
-  .input-area { display: flex; gap: 5px; }
-  #msg { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-  .input-area button { padding: 10px 20px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  .input-area button:hover { background: #005; }
-  
-  .status { font-size: 0.85em; margin-top: 5px; }
-  .status.error { color: #f44336; }
-  .status.ok { color: #4caf50; }
-  
-  /* Modal */
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
-  .modal.active { display: flex; align-items: center; justify-content: center; }
-  .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-  .modal-header { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
-  .form-group { margin-bottom: 15px; }
-  .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-  .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-  .form-group input[type="file"] { padding: 5px; }
-  .preview-pfp { width: 80px; height: 80px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; margin: 10px auto; border: 2px solid #007; }
-  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-  .modal-buttons button { margin: 0; padding: 10px 15px; }
-  .btn-cancel { background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  .btn-cancel:hover { background: #777; }
-  .modal-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #ddd; }
-  .modal-tab { padding: 10px; cursor: pointer; background: #f0f0f0; border: none; }
-  .modal-tab.active { background: #007; color: white; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .search-results { border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; margin-top: 10px; }
-  .search-result-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
-  .search-result-item:hover { background: #f5f5f5; }
+  .input-area { display: flex; gap: 5px; margin-bottom: 10px; }
+  #msg { flex: 1; padding: 5px; }
+  button { padding: 5px 15px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  button:hover { background: #005; }
+  .logout-btn { background: #d32f2f; padding: 5px 10px; font-size: 0.9em; }
+  .logout-btn:hover { background: #b71c1c; }
+  .status { font-size: 0.85em; color: #ccc; margin-top: 5px; }
 </style>
 </head>
 <body>
 <div class="header">
   <h2>Chat Room</h2>
   <div class="user-info">
-    <span id="pfp-avatar" class="pfp-avatar" onclick="openProfileModal()"></span>
-    <div>
-      Online: <span id="count">0</span> | You: <span id="current-user">Loading...</span><br />
-      <button style="padding: 2px 8px; font-size: 0.8em;" onclick="openProfileModal()">Edit Profile</button>
-      <button class="logout-btn" style="padding: 2px 8px; font-size: 0.8em;" onclick="logout()">Logout</button>
-    </div>
+    Online: <span id="count">0</span> | You: <span id="current-user">Loading...</span>
+    <button class="logout-btn" onclick="logout()">Logout</button>
   </div>
 </div>
 
@@ -89,152 +36,69 @@
   <input id="msg" placeholder="Type a message..." disabled />
   <button id="sendBtn" onclick="send()" disabled>Send</button>
 </div>
-<div class="status" id="status">Connecting...</div>
-
-<!-- Profile Modal -->
-<div id="profileModal" class="modal">
-  <div class="modal-content">
-    <div class="modal-header">Settings</div>
-    
-    <div class="modal-tabs">
-      <button class="modal-tab active" onclick="switchTab('profile')">Profile</button>
-      <button class="modal-tab" onclick="switchTab('password')">Password</button>
-      <button class="modal-tab" onclick="switchTab('private')">Private Chat</button>
-    </div>
-    
-    <!-- Profile Tab -->
-    <div id="profile" class="tab-content active">
-      <div class="preview-pfp" id="previewPfp"></div>
-      <div class="form-group">
-        <label for="editUsername">Username</label>
-        <input id="editUsername" type="text" placeholder="Enter new username" />
-      </div>
-      <div class="form-group">
-        <label for="editPfp">Profile Picture (PNG/JPG)</label>
-        <input id="editPfp" type="file" accept="image/*" onchange="previewImage()" />
-      </div>
-    </div>
-    
-    <!-- Password Tab -->
-    <div id="password" class="tab-content">
-      <div class="form-group">
-        <label for="oldPassword">Old Password</label>
-        <input id="oldPassword" type="password" placeholder="Enter old password" />
-      </div>
-      <div class="form-group">
-        <label for="newPassword">New Password</label>
-        <input id="newPassword" type="password" placeholder="Enter new password" />
-      </div>
-      <div class="form-group">
-        <label for="confirmPassword">Confirm Password</label>
-        <input id="confirmPassword" type="password" placeholder="Confirm new password" />
-      </div>
-    </div>
-    
-    <!-- Private Chat Tab -->
-    <div id="private" class="tab-content">
-      <div class="form-group">
-        <label for="searchUser">Search User</label>
-        <input id="searchUser" type="text" placeholder="Type username..." onkeyup="searchUsers()" />
-      </div>
-      <div id="searchResults" class="search-results"></div>
-    </div>
-    
-    <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeProfileModal()">Close</button>
-      <button id="actionBtn" onclick="handleModalAction()">Save</button>
-    </div>
-  </div>
-</div>
+<div class="status" id="status">Connecting... .</div>
 
 <script>
 const chat = document.getElementById('chat');
 const msg = document.getElementById('msg');
+const username = document.getElementById('username');
 const statusEl = document.getElementById('status');
 const countEl = document.getElementById('count');
 const currentUserEl = document.getElementById('current-user');
-const pfpAvatarEl = document.getElementById('pfp-avatar');
 
 let currentUsername = 'Anonymous';
-let currentPfp = '';
 let typingTimeout = null;
 let ws = null;
 
-// Check auth
-const token = localStorage.getItem('token');
-const savedUsername = localStorage.getItem('username');
-const savedPfp = localStorage.getItem('pfp');
-
-if (!token) {
-  window.location.href = '/login.html';
-}
-
-currentUsername = savedUsername || 'Anonymous';
-currentPfp = savedPfp || '';
-currentUserEl.textContent = currentUsername;
-if (currentPfp) {
-  pfpAvatarEl.style.backgroundImage = `url('${currentPfp}')`;
-}
-
 const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
 
-function connectWS() {
+function connectWS(token) {
+  ws = new WebSocket(`${wsProtocol}://${location.host}/ws?token=${encodeURIComponent(token)}`);
+
+  ws.onmessage = e => {
   try {
-    const url = `${wsProtocol}://${location.host}/ws?token=${encodeURIComponent(token)}`;
-    console.log('Connecting to:', url);
-    ws = new WebSocket(url);
+    const data = JSON.parse(e.data);
+    const type = data.type;
+    const info = data.data;
 
-    ws.onopen = () => {
-      console.log('WebSocket connected');
-      statusEl.textContent = '✓ Connected';
-      statusEl.className = 'status ok';
-      msg.disabled = false;
-      document.getElementById('sendBtn').disabled = false;
-      loadMessages();
-    };
-
-    ws.onmessage = e => {
-      try {
-        const data = JSON.parse(e.data);
-        const type = data.type;
-        const info = data.data;
-
-        if (type === 'message') {
-          addMessage(info.username, info.text, info.timestamp);
-        } else if (type === 'user_typing') {
-          showTyping(info.username);
-        } else if (type === 'user_joined') {
-          addEvent(`${info.username} joined the chat`);
-          countEl.textContent = info.count;
-        } else if (type === 'user_left') {
-          addEvent(`${info.username} left the chat`);
-          countEl.textContent = info.count;
-        } else if (type === 'username_changed') {
-          addEvent(`${info.old} is now ${info.new}`);
-        }
-      } catch (err) {
-        console.error('Error parsing message:', err);
-      }
-    };
-
-    ws.onclose = () => {
-      console.log('WebSocket closed');
-      statusEl.textContent = '✗ Disconnected';
-      statusEl.className = 'status error';
-      msg.disabled = true;
-      document.getElementById('sendBtn').disabled = true;
-    };
-
-    ws.onerror = (e) => {
-      console.error('WebSocket error:', e);
-      statusEl.textContent = '✗ Connection error: ' + (e.message || 'unknown');
-      statusEl.className = 'status error';
-    };
-  } catch (e) {
-    console.error('Failed to create WebSocket:', e);
-    statusEl.textContent = '✗ Connection failed: ' + e.message;
-    statusEl.className = 'status error';
+    if (type === 'message') {
+      addMessage(info.username, info.text, info.timestamp);
+    } else if (type === 'user_typing') {
+      showTyping(info.username);
+    } else if (type === 'user_joined') {
+      addEvent(`${info.username} joined the chat`);
+      countEl.textContent = info.count;
+    } else if (type === 'user_left') {
+      addEvent(`${info.username} left the chat`);
+      countEl.textContent = info.count;
+    } else if (type === 'username_changed') {
+      addEvent(`${info.old} is now ${info.new}`);
+    }
+  } catch (err) {
+    console.error('Error parsing message:', err);
   }
+};
+  ws.onopen = () => {
+    statusEl.textContent = '✓ Connected';
+    statusEl.style.color = '#4caf50';
+    msg.disabled = false;
+    document.getElementById('sendBtn').disabled = false;
+    currentUserEl.textContent = currentUsername;
+    loadMessages();
+  };
+
+  ws.onclose = () => {
+    statusEl.textContent = '✗ Disconnected';
+    statusEl.style.color = '#f44336';
+    msg.disabled = true;
+    document.getElementById('sendBtn').disabled = true;
+  };
+
+  ws.onerror = (e) => {
+    console.error('WebSocket error:', e);
+    statusEl.textContent = '✗ Connection error';
+    statusEl.style.color = '#f44336';
+  };
 }
 
 function addMessage(user, text, timestamp) {
@@ -269,10 +133,7 @@ function showTyping(user) {
 async function loadMessages() {
   try {
     const res = await fetch('/messages');
-    if (!res.ok) {
-      console.error('Failed to load messages:', res.status);
-      return;
-    }
+    if (!res.ok) return;
     const data = await res.json();
     data.forEach(m => {
       addMessage(m.username, m.text, '');
@@ -283,14 +144,24 @@ async function loadMessages() {
   }
 }
 
+function setUsername() {
+  const newName = username.value.trim() || 'Anonymous';
+  if (!ws) return alert('Not connected');
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'set_username', content: newName }));
+    currentUsername = newName;
+    currentUserEl.textContent = newName;
+    username.value = '';
+  }
+}
+
 function send() {
   if (!msg.value.trim()) {
     return;
   }
   
-  if (!ws || ws.readyState !== WebSocket.OPEN) {
-    statusEl.textContent = '✗ Not connected';
-    statusEl.className = 'status error';
+  if (ws.readyState !== WebSocket.OPEN) {
+    alert('Not connected');
     return;
   }
   
@@ -301,7 +172,7 @@ function send() {
 }
 
 msg.addEventListener('input', () => {
-  if (ws && ws.readyState === WebSocket.OPEN) {
+  if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify({ type: 'typing' }));
   }
   
@@ -313,220 +184,45 @@ msg.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send();
 });
 
-// Profile management
-let currentTab = 'profile';
+username.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') setUsername();
+});
 
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.modal-tab').forEach(el => el.classList.remove('active'));
-  document.getElementById(tab).classList.add('active');
-  document.event.target.classList.add('active');
-  
-  const btn = document.getElementById('actionBtn');
-  if (tab === 'profile') {
-    btn.textContent = 'Save';
-  } else if (tab === 'password') {
-    btn.textContent = 'Change Password';
-  } else {
-    btn.style.display = 'none';
-  }
+// Auth actions
+async function register() {
+  const user = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value;
+  if (!user || !pw) return alert('Enter username and password');
+  const res = await fetch('/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user, password: pw }) });
+  if (!res.ok) return alert('Registration failed');
+  const data = await res.json();
+  localStorage.setItem('token', data.access_token);
+  currentUsername = user;
+  connectWS(data.access_token);
 }
 
-function openProfileModal() {
-  const modal = document.getElementById('profileModal');
-  modal.classList.add('active');
-  document.getElementById('editUsername').value = currentUsername;
-  const preview = document.getElementById('previewPfp');
-  if (currentPfp) {
-    preview.style.backgroundImage = `url('${currentPfp}')`;
-  } else {
-    preview.style.background = '#ddd';
-  }
+async function login() {
+  const user = document.getElementById('username').value.trim();
+  const pw = document.getElementById('password').value;
+  if (!user || !pw) return alert('Enter username and password');
+  const res = await fetch('/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: user, password: pw }) });
+  if (!res.ok) return alert('Login failed');
+  const data = await res.json();
+  localStorage.setItem('token', data.access_token);
+  currentUsername = user;
+  connectWS(data.access_token);
 }
 
-function closeProfileModal() {
-  document.getElementById('profileModal').classList.remove('active');
-  document.getElementById('editPfp').value = '';
-  document.getElementById('oldPassword').value = '';
-  document.getElementById('newPassword').value = '';
-  document.getElementById('confirmPassword').value = '';
-  document.getElementById('searchUser').value = '';
-  document.getElementById('searchResults').innerHTML = '';
-  document.getElementById('actionBtn').style.display = 'block';
-}
-
-function previewImage() {
-  const fileInput = document.getElementById('editPfp');
-  const preview = document.getElementById('previewPfp');
-  const file = fileInput.files[0];
-  
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      preview.style.backgroundImage = `url('${e.target.result}')`;
-    };
-    reader.readAsDataURL(file);
-  }
-}
-
-async function searchUsers() {
-  const q = document.getElementById('searchUser').value.trim();
-  if (!q || q.length < 2) {
-    document.getElementById('searchResults').innerHTML = '';
-    return;
-  }
-  
+// Auto-connect if token exists
+const saved = localStorage.getItem('token');
+if (saved) {
+  // try decode username from token for UI (best effort)
   try {
-    const res = await fetch(`/search-users?q=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`);
-    if (!res.ok) return;
-    const results = await res.json();
-    
-    const resultsEl = document.getElementById('searchResults');
-    resultsEl.innerHTML = '';
-    results.forEach(user => {
-      const item = document.createElement('div');
-      item.className = 'search-result-item';
-      item.innerHTML = `<span>${user.username}</span>`;
-      item.onclick = () => openPrivateChat(user.username);
-      resultsEl.appendChild(item);
-    });
-  } catch (e) {
-    console.error(e);
-  }
+    const payload = JSON.parse(atob(saved.split('.')[1]));
+    if (payload && payload.sub) currentUsername = payload.sub;
+  } catch (e) {}
+  connectWS(saved);
 }
-
-async function openPrivateChat(withUser) {
-  try {
-    const res = await fetch('/private-chats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, with_user: withUser })
-    });
-    if (!res.ok) {
-      alert('Error creating chat');
-      return;
-    }
-    const data = await res.json();
-    closeProfileModal();
-    alert(`Opened private chat with ${withUser}! (Coming soon - feature under development)`);
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
-async function handleModalAction() {
-  if (currentTab === 'profile') {
-    await saveProfile();
-  } else if (currentTab === 'password') {
-    await changePassword();
-  }
-}
-
-async function saveProfile() {
-  const newUsername = document.getElementById('editUsername').value.trim();
-  const fileInput = document.getElementById('editPfp');
-  let pfpData = currentPfp;
-  
-  if (fileInput.files[0]) {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      pfpData = e.target.result;
-      await doSaveProfile(newUsername, pfpData);
-    };
-    reader.readAsDataURL(fileInput.files[0]);
-  } else {
-    await doSaveProfile(newUsername, pfpData);
-  }
-}
-
-async function doSaveProfile(newUsername, pfpData) {
-  try {
-    const res = await fetch('/profile', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, username: newUsername || null, pfp: pfpData || null })
-    });
-    
-    if (!res.ok) {
-      const err = await res.json();
-      alert('Error: ' + (err.detail || 'Failed to update profile'));
-      return;
-    }
-    
-    const data = await res.json();
-    
-    // Update local storage
-    localStorage.setItem('token', data.access_token);
-    localStorage.setItem('username', data.username);
-    if (data.pfp) localStorage.setItem('pfp', data.pfp);
-    
-    // Update UI
-    currentUsername = data.username;
-    currentPfp = data.pfp || '';
-    currentUserEl.textContent = currentUsername;
-    if (currentPfp) {
-      pfpAvatarEl.style.backgroundImage = `url('${currentPfp}')`;
-    }
-    
-    closeProfileModal();
-    alert('Profile updated successfully!');
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
-async function changePassword() {
-  const oldPw = document.getElementById('oldPassword').value;
-  const newPw = document.getElementById('newPassword').value;
-  const confirmPw = document.getElementById('confirmPassword').value;
-  
-  if (!oldPw || !newPw || !confirmPw) {
-    alert('Please fill all password fields');
-    return;
-  }
-  
-  if (newPw !== confirmPw) {
-    alert('New passwords do not match');
-    return;
-  }
-  
-  if (newPw.length < 6) {
-    alert('New password must be at least 6 characters');
-    return;
-  }
-  
-  try {
-    const res = await fetch('/change-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, old_password: oldPw, new_password: newPw })
-    });
-    
-    if (!res.ok) {
-      const err = await res.json();
-      alert('Error: ' + (err.detail || 'Failed to change password'));
-      return;
-    }
-    
-    document.getElementById('oldPassword').value = '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('confirmPassword').value = '';
-    alert('Password changed successfully!');
-  } catch (e) {
-    alert('Error: ' + e.message);
-  }
-}
-
-function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('username');
-  if (ws) ws.close();
-  window.location.href = '/login.html';
-}
-
-// Connect on load
-connectWS();
 </script>
 </body>
 </html>
