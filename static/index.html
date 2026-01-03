@@ -2,23 +2,55 @@
 <html>
 <head>
 <style>
-  body { font-family: Arial; max-width: 500px; margin: 0 auto; }
-  #chat { border: 1px solid #ccc; height: 300px; overflow-y: auto; padding: 10px; margin: 10px 0; }
-  li { margin: 5px 0; padding: 5px; background: #f0f0f0; border-radius: 4px; }
+  body { font-family: Arial; max-width: 600px; margin: 0 auto; padding: 10px; }
+  .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .header h2 { margin: 0; }
+  .user-info { font-size: 0.9em; color: #666; }
+  #chat { border: 1px solid #ccc; height: 350px; overflow-y: auto; padding: 10px; margin: 10px 0; background: #fafafa; }
+  li { margin: 5px 0; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007; }
   .username { font-weight: bold; color: #007; }
-  input { width: 80%; padding: 5px; }
-  button { padding: 5px 15px; }
+  .timestamp { font-size: 0.75em; color: #999; margin-left: 10px; }
+  .typing { font-style: italic; color: #aaa; }
+  .event { background: #e8f5e9; border-left-color: #4caf50; font-size: 0.9em; color: #555; }
+  .input-area { display: flex; gap: 5px; margin-bottom: 10px; }
+  #username { width: 150px; padding: 5px; }
+  #msg { flex: 1; padding: 5px; }
+  button { padding: 5px 15px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  button:hover { background: #005; }
+  .status { font-size: 0.85em; color: #ccc; margin-top: 5px; }
 </style>
 </head>
 <body>
-<h2>Chat Room</h2>
+<div class="header">
+  <h2>Chat Room</h2>
+  <div class="user-info">
+    Online: <span id="count">0</span> | You: <span id="current-user">Anonymous</span>
+  </div>
+</div>
+
+<div class="input-area">
+  <input id="username" placeholder="Set username..." />
+  <button onclick="setUsername()">Set Name</button>
+</div>
+
 <ul id="chat"></ul>
-<input id="msg" placeholder="Type a message..." />
-<button onclick="send()">Send</button>
+
+<div class="input-area">
+  <input id="msg" placeholder="Type a message..." />
+  <button onclick="send()">Send</button>
+</div>
+<div class="status" id="status">Connecting...</div>
 
 <script>
 const chat = document.getElementById('chat');
 const msg = document.getElementById('msg');
+const username = document.getElementById('username');
+const statusEl = document.getElementById('status');
+const countEl = document.getElementById('count');
+const currentUserEl = document.getElementById('current-user');
+
+let currentUsername = 'Anonymous';
+let typingTimeout = null;
 
 const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
 const ws = new WebSocket(`${wsProtocol}://${location.host}/ws`);
@@ -26,26 +58,72 @@ const ws = new WebSocket(`${wsProtocol}://${location.host}/ws`);
 ws.onmessage = e => {
   try {
     const data = JSON.parse(e.data);
-    const li = document.createElement('li');
-    li.innerHTML = `<span class="username">${data.username}:</span> ${data.text}`;
-    chat.appendChild(li);
-    chat.scrollTop = chat.scrollHeight;
+    const type = data.type;
+    const info = data.data;
+
+    if (type === 'message') {
+      addMessage(info.username, info.text, info.timestamp);
+    } else if (type === 'user_typing') {
+      showTyping(info.username);
+    } else if (type === 'user_joined') {
+      addEvent(`${info.username} joined the chat`);
+      countEl.textContent = info.count;
+    } else if (type === 'user_left') {
+      addEvent(`${info.username} left the chat`);
+      countEl.textContent = info.count;
+    } else if (type === 'username_changed') {
+      addEvent(`${info.old} is now ${info.new}`);
+    }
   } catch (err) {
     console.error('Error parsing message:', err);
   }
 };
 
 ws.onopen = () => {
-  console.log('Connected to chat');
+  statusEl.textContent = '✓ Connected';
+  statusEl.style.color = '#4caf50';
   loadMessages();
 };
 
-ws.onclose = () => console.log('Disconnected from chat');
+ws.onclose = () => {
+  statusEl.textContent = '✗ Disconnected';
+  statusEl.style.color = '#f44336';
+};
 
 ws.onerror = (e) => {
   console.error('WebSocket error:', e);
-  alert('Connection error. Refresh the page.');
+  statusEl.textContent = '✗ Connection error';
+  statusEl.style.color = '#f44336';
 };
+
+function addMessage(user, text, timestamp) {
+  const li = document.createElement('li');
+  const time = timestamp ? new Date(timestamp).toLocaleTimeString() : '';
+  li.innerHTML = `<span class="username">${user}:</span> ${text} <span class="timestamp">${time}</span>`;
+  chat.appendChild(li);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function addEvent(text) {
+  const li = document.createElement('li');
+  li.className = 'event';
+  li.textContent = text;
+  chat.appendChild(li);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function showTyping(user) {
+  const existing = Array.from(chat.children).find(li => li.classList.contains('typing'));
+  if (existing) existing.remove();
+  
+  const li = document.createElement('li');
+  li.className = 'typing';
+  li.textContent = `${user} is typing...`;
+  chat.appendChild(li);
+  chat.scrollTop = chat.scrollHeight;
+  
+  setTimeout(() => li.remove(), 2000);
+}
 
 async function loadMessages() {
   try {
@@ -53,36 +131,56 @@ async function loadMessages() {
     if (!res.ok) return;
     const data = await res.json();
     data.forEach(m => {
-      const li = document.createElement('li');
-      li.innerHTML = `<span class="username">${m.username}:</span> ${m.text}`;
-      chat.appendChild(li);
+      addMessage(m.username, m.text, '');
     });
     chat.scrollTop = chat.scrollHeight;
   } catch (e) {
-    console.error(e);
+    console.error('Error loading messages:', e);
+  }
+}
+
+function setUsername() {
+  const newName = username.value.trim() || 'Anonymous';
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'set_username', content: newName }));
+    currentUsername = newName;
+    currentUserEl.textContent = newName;
+    username.value = '';
   }
 }
 
 function send() {
   if (!msg.value.trim()) {
-    alert('Message cannot be empty');
     return;
   }
   
   if (ws.readyState !== WebSocket.OPEN) {
-    alert('Not connected to chat. Please refresh the page.');
+    alert('Not connected');
     return;
   }
   
-  ws.send(msg.value);
+  ws.send(JSON.stringify({ type: 'message', content: msg.value }));
   msg.value = '';
+  
+  if (typingTimeout) clearTimeout(typingTimeout);
 }
+
+msg.addEventListener('input', () => {
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: 'typing' }));
+  }
+  
+  if (typingTimeout) clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => {}, 2000);
+});
 
 msg.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send();
 });
 
-loadMessages();
+username.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') setUsername();
+});
 </script>
 </body>
 </html>

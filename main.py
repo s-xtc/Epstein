@@ -15,8 +15,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Track connected clients
-connected_clients = set()
+# Track connected clients with their usernames
+connected_clients = {}  # {ws: username}
+current_username = "User"
 
 
 @app.get("/messages")
@@ -34,31 +35,71 @@ async def get_messages(limit: int = 50):
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await ws.accept()
-    connected_clients.add(ws)
+    username = "Anonymous"
+    connected_clients[ws] = username
+    
+    # Notify others of user joining
+    await broadcast_event("user_joined", {"username": username, "count": len(connected_clients)})
+    
     try:
         while True:
             data = await ws.receive_text()
             if not data.strip():
                 continue
 
-            # Store in database with username
-            msg_doc = {
-                "username": "User",  # could be enhanced with auth
-                "message": data,
-                "timestamp": datetime.utcnow(),
-            }
-            messages.insert_one(msg_doc)
+            # Parse message type
+            try:
+                import json
+                msg_data = json.loads(data)
+                msg_type = msg_data.get("type", "message")
+                content = msg_data.get("content", "")
+            except:
+                msg_type = "message"
+                content = data
 
-            # Broadcast to all connected clients
-            for client in connected_clients:
-                try:
-                    await client.send_json(
-                        {"username": "User", "text": data}
-                    )
-                except Exception:
-                    pass
+            if msg_type == "set_username":
+                # Change username
+                old_username = username
+                username = content.strip() or "Anonymous"
+                connected_clients[ws] = username
+                await broadcast_event("username_changed", {"old": old_username, "new": username})
+                continue
+
+            elif msg_type == "typing":
+                # Broadcast typing indicator
+                await broadcast_event("user_typing", {"username": username})
+                continue
+
+            elif msg_type == "message":
+                # Store in database with username and timestamp
+                msg_doc = {
+                    "username": username,
+                    "message": content,
+                    "timestamp": datetime.utcnow(),
+                }
+                messages.insert_one(msg_doc)
+
+                # Broadcast to all connected clients
+                await broadcast_event("message", {
+                    "username": username,
+                    "text": content,
+                    "timestamp": datetime.utcnow().isoformat()
+                })
+
     except WebSocketDisconnect:
-        connected_clients.discard(ws)
+        connected_clients.pop(ws, None)
+        await broadcast_event("user_left", {"username": username, "count": len(connected_clients)})
+
+
+async def broadcast_event(event_type: str, data: dict):
+    """Broadcast an event to all connected clients."""
+    import json
+    message = {"type": event_type, "data": data}
+    for client in list(connected_clients.keys()):
+        try:
+            await client.send_json(message)
+        except Exception:
+            pass
 
 
 # Serve static files AFTER defining API routes
