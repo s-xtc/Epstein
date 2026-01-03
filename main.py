@@ -110,9 +110,16 @@ async def get_profile(token: str):
     }
 
 
+class ProfileUpdate(BaseModel):
+    token: str
+    username: Optional[str] = None
+    pfp: Optional[str] = None
+
+
 @app.post("/profile")
-async def update_profile(token: str, username: str = None, pfp: str = None):
+async def update_profile(data: ProfileUpdate):
     """Update user profile (username and/or pfp)."""
+    token = data.token
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         old_username = payload.get("sub")
@@ -124,17 +131,17 @@ async def update_profile(token: str, username: str = None, pfp: str = None):
         raise HTTPException(status_code=404, detail="User not found")
     
     updates = {}
-    if username and username != old_username:
+    if data.username and data.username != old_username:
         # Check if new username exists
-        if users.find_one({"username": username}):
+        if users.find_one({"username": data.username}):
             raise HTTPException(status_code=400, detail="Username already taken")
-        updates["username"] = username
+        updates["username"] = data.username
     
-    if pfp:
+    if data.pfp:
         # Limit pfp size to 500KB
-        if len(pfp) > 500000:
+        if len(data.pfp) > 500000:
             raise HTTPException(status_code=400, detail="Image too large")
-        updates["pfp"] = pfp
+        updates["pfp"] = data.pfp
     
     if updates:
         users.update_one({"username": old_username}, {"$set": updates})
@@ -149,6 +156,76 @@ async def update_profile(token: str, username: str = None, pfp: str = None):
         "username": new_username,
         "pfp": updates.get("pfp", user.get("pfp", "")),
     }
+
+
+@app.get("/search-users")
+async def search_users(q: str, token: str):
+    """Search for users by username."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        current_user = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    if not q or len(q) < 2:
+        return []
+    
+    # Find users matching the query (exclude self)
+    found = users.find({"username": {"$regex": f"^{q}", "$options": "i"}}).limit(10)
+    results = [{"username": u.get("username"), "pfp": u.get("pfp", "")} for u in found if u.get("username") != current_user]
+    return results
+
+
+@app.post("/private-chats")
+async def create_private_chat(token: str, with_user: str):
+    """Create or get private chat with another user."""
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    if username == with_user:
+        raise HTTPException(status_code=400, detail="Cannot chat with yourself")
+    
+    # Check if target user exists
+    if not users.find_one({"username": with_user}):
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Create chat ID (sorted usernames for consistency)
+    chat_id = "-".join(sorted([username, with_user]))
+    
+    return {"chat_id": chat_id, "with_user": with_user}
+
+
+class PasswordChange(BaseModel):
+    token: str
+    old_password: str
+    new_password: str
+
+
+@app.post("/change-password")
+async def change_password(data: PasswordChange):
+    """Change user password."""
+    try:
+        payload = jwt.decode(data.token, SECRET_KEY, algorithms=[ALGORITHM])
+        username = payload.get("sub")
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    user = users.find_one({"username": username})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify old password
+    if not verify_password(data.old_password, user.get("hashed_password", "")):
+        raise HTTPException(status_code=401, detail="Incorrect old password")
+    
+    # Hash and update new password
+    new_hashed = get_password_hash(data.new_password)
+    users.update_one({"username": username}, {"$set": {"hashed_password": new_hashed}})
+    
+    return {"message": "Password changed successfully"}
 
 
 @app.get("/messages")

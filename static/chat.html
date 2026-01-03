@@ -25,17 +25,26 @@
   /* Profile modal */
   .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
   .modal.active { display: flex; align-items: center; justify-content: center; }
-  .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; }
+  .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
   .modal-header { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
   .form-group { margin-bottom: 15px; }
   .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
   .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
   .form-group input[type="file"] { padding: 5px; }
   .preview-pfp { width: 80px; height: 80px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; margin: 10px auto; border: 2px solid #007; }
-  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
   .modal-buttons button { margin: 0; }
   .btn-cancel { background: #999; }
   .btn-cancel:hover { background: #777; }
+  .modal-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #ddd; }
+  .modal-tab { padding: 10px; cursor: pointer; background: #f0f0f0; border: none; }
+  .modal-tab.active { background: #007; color: white; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+  .search-results { border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; margin-top: 10px; }
+  .search-result-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
+  .search-result-item:hover { background: #f5f5f5; }
+  .search-result-item img { width: 30px; height: 30px; border-radius: 50%; margin-right: 10px; vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -62,22 +71,55 @@
 <!-- Profile Modal -->
 <div id="profileModal" class="modal">
   <div class="modal-content">
-    <div class="modal-header">Edit Profile</div>
-    <div class="preview-pfp" id="previewPfp"></div>
+    <div class="modal-header">Settings</div>
     
-    <div class="form-group">
-      <label for="editUsername">Username</label>
-      <input id="editUsername" type="text" placeholder="Enter new username" />
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchTab('profile')">Profile</button>
+      <button class="modal-tab" onclick="switchTab('password')">Password</button>
+      <button class="modal-tab" onclick="switchTab('private')">Private Chat</button>
     </div>
     
-    <div class="form-group">
-      <label for="editPfp">Profile Picture (PNG/JPG)</label>
-      <input id="editPfp" type="file" accept="image/*" onchange="previewImage()" />
+    <!-- Profile Tab -->
+    <div id="profile" class="tab-content active">
+      <div class="preview-pfp" id="previewPfp"></div>
+      <div class="form-group">
+        <label for="editUsername">Username</label>
+        <input id="editUsername" type="text" placeholder="Enter new username" />
+      </div>
+      <div class="form-group">
+        <label for="editPfp">Profile Picture (PNG/JPG)</label>
+        <input id="editPfp" type="file" accept="image/*" onchange="previewImage()" />
+      </div>
+    </div>
+    
+    <!-- Password Tab -->
+    <div id="password" class="tab-content">
+      <div class="form-group">
+        <label for="oldPassword">Old Password</label>
+        <input id="oldPassword" type="password" placeholder="Enter old password" />
+      </div>
+      <div class="form-group">
+        <label for="newPassword">New Password</label>
+        <input id="newPassword" type="password" placeholder="Enter new password" />
+      </div>
+      <div class="form-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input id="confirmPassword" type="password" placeholder="Confirm new password" />
+      </div>
+    </div>
+    
+    <!-- Private Chat Tab -->
+    <div id="private" class="tab-content">
+      <div class="form-group">
+        <label for="searchUser">Search User</label>
+        <input id="searchUser" type="text" placeholder="Type username..." onkeyup="searchUsers()" />
+      </div>
+      <div id="searchResults" class="search-results"></div>
     </div>
     
     <div class="modal-buttons">
-      <button class="btn-cancel" onclick="closeProfileModal()">Cancel</button>
-      <button onclick="saveProfile()">Save</button>
+      <button class="btn-cancel" onclick="closeProfileModal()">Close</button>
+      <button id="actionBtn" onclick="handleModalAction()">Save</button>
     </div>
   </div>
 </div>
@@ -249,6 +291,25 @@ msg.addEventListener('keypress', (e) => {
 });
 
 // Profile management
+let currentTab = 'profile';
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.modal-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  document.event.target.classList.add('active');
+  
+  const btn = document.getElementById('actionBtn');
+  if (tab === 'profile') {
+    btn.textContent = 'Save';
+  } else if (tab === 'password') {
+    btn.textContent = 'Change Password';
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
 function openProfileModal() {
   const modal = document.getElementById('profileModal');
   modal.classList.add('active');
@@ -264,6 +325,12 @@ function openProfileModal() {
 function closeProfileModal() {
   document.getElementById('profileModal').classList.remove('active');
   document.getElementById('editPfp').value = '';
+  document.getElementById('oldPassword').value = '';
+  document.getElementById('newPassword').value = '';
+  document.getElementById('confirmPassword').value = '';
+  document.getElementById('searchUser').value = '';
+  document.getElementById('searchResults').innerHTML = '';
+  document.getElementById('actionBtn').style.display = 'block';
 }
 
 function previewImage() {
@@ -277,6 +344,59 @@ function previewImage() {
       preview.style.backgroundImage = `url('${e.target.result}')`;
     };
     reader.readAsDataURL(file);
+  }
+}
+
+async function searchUsers() {
+  const q = document.getElementById('searchUser').value.trim();
+  if (!q || q.length < 2) {
+    document.getElementById('searchResults').innerHTML = '';
+    return;
+  }
+  
+  try {
+    const res = await fetch(`/search-users?q=${encodeURIComponent(q)}&token=${encodeURIComponent(token)}`);
+    if (!res.ok) return;
+    const results = await res.json();
+    
+    const resultsEl = document.getElementById('searchResults');
+    resultsEl.innerHTML = '';
+    results.forEach(user => {
+      const item = document.createElement('div');
+      item.className = 'search-result-item';
+      item.innerHTML = `<span>${user.username}</span>`;
+      item.onclick = () => openPrivateChat(user.username);
+      resultsEl.appendChild(item);
+    });
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+async function openPrivateChat(withUser) {
+  try {
+    const res = await fetch('/private-chats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, with_user: withUser })
+    });
+    if (!res.ok) {
+      alert('Error creating chat');
+      return;
+    }
+    const data = await res.json();
+    closeProfileModal();
+    alert(`Opened private chat with ${withUser}! (Coming soon - feature under development)`);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function handleModalAction() {
+  if (currentTab === 'profile') {
+    await saveProfile();
+  } else if (currentTab === 'password') {
+    await changePassword();
   }
 }
 
@@ -328,6 +448,48 @@ async function doSaveProfile(newUsername, pfpData) {
     
     closeProfileModal();
     alert('Profile updated successfully!');
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function changePassword() {
+  const oldPw = document.getElementById('oldPassword').value;
+  const newPw = document.getElementById('newPassword').value;
+  const confirmPw = document.getElementById('confirmPassword').value;
+  
+  if (!oldPw || !newPw || !confirmPw) {
+    alert('Please fill all password fields');
+    return;
+  }
+  
+  if (newPw !== confirmPw) {
+    alert('New passwords do not match');
+    return;
+  }
+  
+  if (newPw.length < 6) {
+    alert('New password must be at least 6 characters');
+    return;
+  }
+  
+  try {
+    const res = await fetch('/change-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, old_password: oldPw, new_password: newPw })
+    });
+    
+    if (!res.ok) {
+      const err = await res.json();
+      alert('Error: ' + (err.detail || 'Failed to change password'));
+      return;
+    }
+    
+    document.getElementById('oldPassword').value = '';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('confirmPassword').value = '';
+    alert('Password changed successfully!');
   } catch (e) {
     alert('Error: ' + e.message);
   }
