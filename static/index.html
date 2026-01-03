@@ -24,15 +24,28 @@ const wsProtocol = location.protocol === 'https:' ? 'wss' : 'ws';
 const ws = new WebSocket(`${wsProtocol}://${location.host}/ws`);
 
 ws.onmessage = e => {
-  const data = JSON.parse(e.data);
-  const li = document.createElement('li');
-  li.innerHTML = `<span class="username">${data.username}:</span> ${data.text}`;
-  chat.appendChild(li);
-  chat.scrollTop = chat.scrollHeight;
+  try {
+    const data = JSON.parse(e.data);
+    const li = document.createElement('li');
+    li.innerHTML = `<span class="username">${data.username}:</span> ${data.text}`;
+    chat.appendChild(li);
+    chat.scrollTop = chat.scrollHeight;
+  } catch (err) {
+    console.error('Error parsing message:', err);
+  }
 };
 
-ws.onopen = () => console.log('Connected to chat');
+ws.onopen = () => {
+  console.log('Connected to chat');
+  loadMessages();
+};
+
 ws.onclose = () => console.log('Disconnected from chat');
+
+ws.onerror = (e) => {
+  console.error('WebSocket error:', e);
+  alert('Connection error. Refresh the page.');
+};
 
 async function loadMessages() {
   try {
@@ -51,10 +64,18 @@ async function loadMessages() {
 }
 
 function send() {
-  if (msg.value.trim() && ws.readyState === WebSocket.OPEN) {
-    ws.send(msg.value);
-    msg.value = '';
+  if (!msg.value.trim()) {
+    alert('Message cannot be empty');
+    return;
   }
+  
+  if (ws.readyState !== WebSocket.OPEN) {
+    alert('Not connected to chat. Please refresh the page.');
+    return;
+  }
+  
+  ws.send(msg.value);
+  msg.value = '';
 }
 
 msg.addEventListener('keypress', (e) => {
