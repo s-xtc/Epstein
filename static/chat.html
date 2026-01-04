@@ -1,95 +1,618 @@
 <!DOCTYPE html>
 <html>
 <head>
+<title>Sinister Chat</title>
 <style>
   * { box-sizing: border-box; }
-  body { font-family: Arial; margin: 0; padding: 0; display: flex; height: 100vh; }
-  .sidebar { width: 300px; background: #f5f5f5; border-right: 1px solid #ccc; display: flex; flex-direction: column; }
-  .sidebar-header { padding: 15px; border-bottom: 1px solid #ddd; }
-  .sidebar-header h3 { margin: 0 0 10px 0; }
-  .user-profile { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-  .pfp-avatar { width: 40px; height: 40px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; border: 2px solid #007; cursor: pointer; flex-shrink: 0; }
-  .user-name { font-weight: bold; flex: 1; overflow: hidden; text-overflow: ellipsis; }
-  .sidebar-buttons { display: flex; gap: 5px; flex-wrap: wrap; }
-  .sidebar-buttons button { flex: 1; min-width: 80px; padding: 8px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9em; }
-  .sidebar-buttons button:hover { background: #005; }
-  .sidebar-buttons .logout-btn { background: #d32f2f; }
-  .sidebar-buttons .logout-btn:hover { background: #b71c1c; }
+  body { 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+    margin: 0; 
+    padding: 0; 
+    display: flex; 
+    height: 100vh; 
+    background-color: #121212;
+    color: #e0e0e0;
+  }
   
-  .chat-section { flex: 1; display: flex; flex-direction: column; }
-  .chat-header { padding: 15px; border-bottom: 1px solid #ccc; background: white; }
-  .chat-header h2 { margin: 0; }
+  /* Sidebar */
+  .sidebar { 
+    width: 320px; 
+    background: #1e1e1e; 
+    border-right: 1px solid #2d2d2d; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  .sidebar-header { 
+    padding: 15px; 
+    border-bottom: 1px solid #2d2d2d; 
+  }
+  .sidebar-header h3 { 
+    margin: 0 0 15px 0; 
+    color: #ffffff; 
+    font-size: 18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+  }
   
-  .chats-list { flex: 1; overflow-y: auto; padding: 10px; }
-  .chat-item { padding: 10px; background: white; margin-bottom: 8px; border-radius: 4px; border-left: 3px solid #007; cursor: pointer; }
-  .chat-item:hover { background: #f0f0f0; }
-  .chat-item.active { background: #e8f5e9; border-left-color: #4caf50; }
-  .chat-item-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-  .chat-item-avatar { width: 30px; height: 30px; border-radius: 50%; background: #ddd; background-size: cover; flex-shrink: 0; }
-  .chat-item-name { font-weight: bold; }
-  .chat-item-type { font-size: 0.8em; color: #999; }
+  /* User Profile in Sidebar */
+  .user-profile { 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    margin-bottom: 15px; 
+    padding: 10px;
+    background: #252525;
+    border: 1px solid #2d2d2d;
+  }
+  .pfp-avatar { 
+    width: 45px; 
+    height: 45px; 
+    background: #333; 
+    background-size: cover; 
+    background-position: center; 
+    border: 2px solid #444; 
+    cursor: pointer; 
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+  .user-info { 
+    flex: 1;
+    overflow: hidden;
+  }
+  .user-name { 
+    font-weight: 600; 
+    color: #ffffff;
+    margin-bottom: 3px;
+    font-size: 14px;
+  }
+  .user-status { 
+    font-size: 0.75em; 
+    color: #4CAF50; 
+  }
   
-  .messages-area { flex: 1; display: flex; flex-direction: column; padding: 15px; }
-  #chat { flex: 1; border: 1px solid #ccc; overflow-y: auto; padding: 10px; background: #fafafa; margin-bottom: 10px; border-radius: 4px; }
-  li { margin: 5px 0; padding: 8px; background: white; border-radius: 4px; border-left: 3px solid #007; }
-  .username { font-weight: bold; color: #007; }
-  .timestamp { font-size: 0.75em; color: #999; margin-left: 10px; }
-  .typing { font-style: italic; color: #aaa; }
-  .event { background: #e8f5e9; border-left-color: #4caf50; font-size: 0.9em; color: #555; }
+  /* Sidebar Sections */
+  .sidebar-section { 
+    margin-bottom: 15px; 
+  }
+  .section-title { 
+    padding: 10px 15px; 
+    background: #252525; 
+    color: #cccccc; 
+    font-size: 0.85em; 
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #2d2d2d;
+  }
   
-  .input-area { display: flex; gap: 5px; }
-  #msg { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-  .input-area button { padding: 10px 20px; background: #007; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  .input-area button:hover { background: #005; }
+  /* Buttons */
+  .sidebar-buttons { 
+    display: flex; 
+    gap: 5px; 
+    padding: 0 15px 15px 15px;
+    border-bottom: 1px solid #2d2d2d;
+  }
+  button {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  .sidebar-buttons button { 
+    flex: 1; 
+    min-width: 80px; 
+    padding: 8px; 
+    background: #2d2d2d; 
+    color: #ffffff; 
+    border: 1px solid #3d3d3d; 
+    cursor: pointer; 
+    font-size: 0.9em; 
+    transition: background-color 0.2s;
+  }
+  .sidebar-buttons button:hover { 
+    background: #3d3d3d; 
+  }
+  .sidebar-buttons .logout-btn { 
+    background: #5a1a1a; 
+    border-color: #6a2a2a;
+  }
+  .sidebar-buttons .logout-btn:hover { 
+    background: #6a2a2a; 
+  }
   
-  .status { font-size: 0.85em; margin-top: 5px; }
-  .status.error { color: #f44336; }
-  .status.ok { color: #4caf50; }
+  /* Chat Lists */
+  .chats-list { 
+    flex: 1; 
+    overflow-y: auto; 
+  }
+  .chat-type-title {
+    padding: 8px 15px;
+    background: #252525;
+    color: #aaaaaa;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid #2d2d2d;
+  }
+  .chat-item { 
+    padding: 12px 15px; 
+    background: transparent; 
+    cursor: pointer; 
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #252525;
+  }
+  .chat-item:hover { 
+    background: #252525; 
+  }
+  .chat-item.active { 
+    background: #1a3d1a; 
+    border-left: 3px solid #4CAF50; 
+  }
+  .chat-item-avatar { 
+    width: 35px; 
+    height: 35px; 
+    background: #333; 
+    background-size: cover; 
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+  .chat-item-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .chat-item-header { 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    margin-bottom: 3px; 
+  }
+  .chat-item-name { 
+    font-weight: 600; 
+    color: #ffffff;
+    font-size: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .chat-item-time { 
+    font-size: 0.7em; 
+    color: #777; 
+  }
+  .chat-item-preview { 
+    font-size: 0.85em; 
+    color: #aaa; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .unread-badge {
+    background: #4CAF50;
+    color: white;
+    font-size: 0.7em;
+    padding: 2px 6px;
+    border-radius: 10px;
+    margin-left: auto;
+  }
+  
+  /* Main Chat Area */
+  .chat-section { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  .chat-header { 
+    padding: 15px; 
+    border-bottom: 1px solid #2d2d2d; 
+    background: #1a1a1a; 
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-header-avatar {
+    width: 40px;
+    height: 40px;
+    background: #333;
+    background-size: cover;
+    border-radius: 50%;
+  }
+  .chat-header-info {
+    flex: 1;
+  }
+  .chat-header h2 { 
+    margin: 0 0 3px 0; 
+    color: #ffffff;
+    font-size: 16px;
+  }
+  .chat-header-status { 
+    font-size: 0.8em; 
+    color: #4CAF50; 
+  }
+  
+  /* Messages Area */
+  .messages-area { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    background: #121212;
+  }
+  #chat { 
+    flex: 1; 
+    border: none; 
+    overflow-y: auto; 
+    padding: 15px; 
+    background: #0f0f0f; 
+    margin: 0;
+    list-style: none;
+  }
+  
+  /* Message Items */
+  #chat li { 
+    margin: 12px 0; 
+    padding: 12px; 
+    background: #1a1a1a; 
+    border-left: 3px solid #3d3d3d; 
+    transition: background-color 0.2s;
+    display: flex;
+    gap: 10px;
+  }
+  .message-avatar {
+    width: 35px;
+    height: 35px;
+    background: #333;
+    background-size: cover;
+    flex-shrink: 0;
+    border-radius: 50%;
+  }
+  .message-content {
+    flex: 1;
+    min-width: 0;
+  }
+  .message-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+  .username { 
+    font-weight: 600; 
+    color: #4dabf7; 
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .username-pfp {
+    width: 20px;
+    height: 20px;
+    background: #333;
+    background-size: cover;
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+  }
+  .timestamp { 
+    font-size: 0.75em; 
+    color: #777; 
+    margin-left: auto;
+  }
+  .typing { 
+    font-style: italic; 
+    color: #777; 
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .event { 
+    background: #1a2d1a; 
+    border-left-color: #2e7d32; 
+    font-size: 0.85em; 
+    color: #aaa; 
+    text-align: center;
+    justify-content: center;
+  }
+  
+  /* Input Area */
+  .input-area { 
+    display: flex; 
+    gap: 5px; 
+    padding: 15px;
+    background: #1a1a1a;
+    border-top: 1px solid #2d2d2d;
+  }
+  #msg { 
+    flex: 1; 
+    padding: 12px; 
+    border: 1px solid #2d2d2d; 
+    background: #252525; 
+    color: #e0e0e0; 
+    font-size: 14px;
+  }
+  #msg::placeholder {
+    color: #777;
+  }
+  .input-area button { 
+    padding: 12px 20px; 
+    background: #2d2d2d; 
+    color: white; 
+    border: 1px solid #3d3d3d; 
+    cursor: pointer; 
+    font-weight: 600;
+    transition: background-color 0.2s;
+  }
+  .input-area button:hover { 
+    background: #3d3d3d; 
+  }
+  
+  /* Status */
+  .status { 
+    font-size: 0.85em; 
+    padding: 10px 15px; 
+    background: #1a1a1a;
+    border-top: 1px solid #2d2d2d;
+  }
+  .status.error { 
+    color: #f44336; 
+    background: #2a1a1a;
+  }
+  .status.ok { 
+    color: #4CAF50; 
+    background: #1a2a1a;
+  }
   
   /* Modal */
-  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; }
-  .modal.active { display: flex; align-items: center; justify-content: center; }
-  .modal-content { background: white; padding: 20px; border-radius: 8px; width: 90%; max-width: 400px; max-height: 80vh; overflow-y: auto; }
-  .modal-header { font-size: 1.2em; font-weight: bold; margin-bottom: 15px; }
-  .form-group { margin-bottom: 15px; }
-  .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-  .form-group input { width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-  .form-group input[type="file"] { padding: 5px; }
-  .preview-pfp { width: 80px; height: 80px; border-radius: 50%; background: #ddd; background-size: cover; background-position: center; margin: 10px auto; border: 2px solid #007; }
-  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-  .modal-buttons button { margin: 0; padding: 10px 15px; }
-  .btn-cancel { background: #999; color: white; border: none; border-radius: 4px; cursor: pointer; }
-  .btn-cancel:hover { background: #777; }
-  .modal-tabs { display: flex; gap: 5px; margin-bottom: 15px; border-bottom: 1px solid #ddd; }
-  .modal-tab { padding: 10px; cursor: pointer; background: #f0f0f0; border: none; }
-  .modal-tab.active { background: #007; color: white; }
-  .tab-content { display: none; }
-  .tab-content.active { display: block; }
-  .search-results { border: 1px solid #ddd; border-radius: 4px; max-height: 200px; overflow-y: auto; margin-top: 10px; }
-  .search-result-item { padding: 10px; border-bottom: 1px solid #eee; cursor: pointer; }
-  .search-result-item:hover { background: #f5f5f5; }
+  .modal { 
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.8); 
+    z-index: 999; 
+  }
+  .modal.active { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+  }
+  .modal-content { 
+    background: #1e1e1e; 
+    padding: 20px; 
+    border: 1px solid #2d2d2d; 
+    width: 90%; 
+    max-width: 400px; 
+    max-height: 80vh; 
+    overflow-y: auto; 
+  }
+  .modal-header { 
+    font-size: 1.2em; 
+    font-weight: 600; 
+    margin-bottom: 15px; 
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .form-group { 
+    margin-bottom: 15px; 
+  }
+  .form-group label { 
+    display: block; 
+    margin-bottom: 5px; 
+    font-weight: 600; 
+    color: #cccccc;
+  }
+  .form-group input { 
+    width: 100%; 
+    padding: 10px; 
+    border: 1px solid #2d2d2d; 
+    background: #252525; 
+    color: #e0e0e0; 
+    box-sizing: border-box; 
+  }
+  .form-group input[type="file"] { 
+    padding: 8px; 
+  }
+  .preview-pfp { 
+    width: 80px; 
+    height: 80px; 
+    background: #333; 
+    background-size: cover; 
+    background-position: center; 
+    margin: 10px auto; 
+    border: 2px solid #444;
+    border-radius: 50%;
+  }
+  .modal-buttons { 
+    display: flex; 
+    gap: 10px; 
+    justify-content: flex-end; 
+    margin-top: 20px; 
+  }
+  .modal-buttons button { 
+    margin: 0; 
+    padding: 10px 15px; 
+  }
+  .btn-cancel { 
+    background: #333; 
+    color: white; 
+    border: 1px solid #444; 
+    cursor: pointer; 
+  }
+  .btn-cancel:hover { 
+    background: #444; 
+  }
+  .modal-tabs { 
+    display: flex; 
+    gap: 0; 
+    margin-bottom: 15px; 
+    border-bottom: 1px solid #2d2d2d; 
+  }
+  .modal-tab { 
+    padding: 10px 15px; 
+    cursor: pointer; 
+    background: #252525; 
+    border: 1px solid #2d2d2d; 
+    border-bottom: none;
+    color: #aaa;
+    transition: all 0.2s;
+  }
+  .modal-tab.active { 
+    background: #1e1e1e; 
+    color: #ffffff; 
+    border-bottom: 1px solid #1e1e1e;
+    margin-bottom: -1px;
+  }
+  .tab-content { 
+    display: none; 
+  }
+  .tab-content.active { 
+    display: block; 
+  }
+  .search-results { 
+    border: 1px solid #2d2d2d; 
+    max-height: 200px; 
+    overflow-y: auto; 
+    margin-top: 10px; 
+    background: #252525;
+  }
+  .search-result-item { 
+    padding: 12px; 
+    border-bottom: 1px solid #333; 
+    cursor: pointer; 
+    color: #cccccc;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .search-result-item:hover { 
+    background: #2d2d2d; 
+  }
+  .search-result-avatar {
+    width: 30px;
+    height: 30px;
+    background: #333;
+    background-size: cover;
+    border-radius: 50%;
+  }
+  
+  /* Scrollbar Styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1a1a1a;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #333;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+  
+  /* Private Chat List */
+  .private-chats-list {
+    max-height: 250px;
+    overflow-y: auto;
+  }
 </style>
 </head>
 <body>
-<div class="header">
-  <h2>Chat Room</h2>
-  <div class="user-info">
-    <span id="pfp-avatar" class="pfp-avatar" onclick="openProfileModal()"></span>
-    <div>
-      Online: <span id="count">0</span> | You: <span id="current-user">Loading...</span><br />
-      <button style="padding: 2px 8px; font-size: 0.8em;" onclick="openProfileModal()">Edit Profile</button>
-      <button class="logout-btn" style="padding: 2px 8px; font-size: 0.8em;" onclick="logout()">Logout</button>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h3>Sinister Chat</h3>
+    <div class="user-profile">
+      <span id="pfp-avatar" class="pfp-avatar" onclick="openProfileModal()"></span>
+      <div class="user-info">
+        <div class="user-name" id="current-user">Loading...</div>
+        <div class="user-status" id="user-status">Online</div>
+      </div>
+    </div>
+    
+    <div class="sidebar-buttons">
+      <button onclick="openProfileModal()">Settings</button>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+  </div>
+  
+  <!-- Public Chats Section -->
+  <div class="sidebar-section">
+    <div class="section-title">Public Rooms</div>
+    <div class="chats-list">
+      <div class="chat-item active" onclick="switchToChat('main', 'Main Chat')">
+        <div class="chat-item-avatar" id="main-chat-avatar"></div>
+        <div class="chat-item-info">
+          <div class="chat-item-header">
+            <div class="chat-item-name">Main Chat</div>
+            <div class="chat-item-time" id="main-chat-time">Just now</div>
+          </div>
+          <div class="chat-item-preview" id="main-chat-preview">Welcome to Sinister Chat</div>
+        </div>
+        <div class="unread-badge" id="main-unread" style="display: none;">0</div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Private Chats Section -->
+  <div class="sidebar-section">
+    <div class="section-title">Private Chats</div>
+    <div class="private-chats-list" id="privateChatsList">
+      <!-- Private chats will be loaded here -->
+      <div class="chat-item" onclick="switchToPrivateChat('user1', 'Shadow User')">
+        <div class="chat-item-avatar" style="background-image: url('https://i.pravatar.cc/150?img=1')"></div>
+        <div class="chat-item-info">
+          <div class="chat-item-header">
+            <div class="chat-item-name">Shadow User</div>
+            <div class="chat-item-time">2:30 PM</div>
+          </div>
+          <div class="chat-item-preview">Hey there! How are you?</div>
+        </div>
+        <div class="unread-badge">3</div>
+      </div>
+      <div class="chat-item" onclick="switchToPrivateChat('user2', 'Dark Messenger')">
+        <div class="chat-item-avatar" style="background-image: url('https://i.pravatar.cc/150?img=2')"></div>
+        <div class="chat-item-info">
+          <div class="chat-item-header">
+            <div class="chat-item-name">Dark Messenger</div>
+            <div class="chat-item-time">Yesterday</div>
+          </div>
+          <div class="chat-item-preview">Did you see the new update?</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Online Users Section -->
+  <div class="sidebar-section">
+    <div class="section-title">Online Users</div>
+    <div class="chats-list" id="onlineUsersList">
+      <!-- Online users will be populated here -->
+    </div>
+  </div>
+  
+  <div class="status" id="status">Connecting...</div>
+</div>
+
+<!-- Main Chat Area -->
+<div class="chat-section">
+  <div class="chat-header">
+    <div class="chat-header-avatar" id="current-chat-avatar"></div>
+    <div class="chat-header-info">
+      <h2 id="current-chat-name">Main Chat</h2>
+      <div class="chat-header-status" id="current-chat-status">Public Room • <span id="online-count">0</span> online</div>
+    </div>
+  </div>
+  
+  <div class="messages-area">
+    <ul id="chat"></ul>
+    
+    <div class="input-area">
+      <input id="msg" placeholder="Type a message..." disabled />
+      <button id="sendBtn" onclick="send()" disabled>Send</button>
     </div>
   </div>
 </div>
-
-<ul id="chat"></ul>
-
-<div class="input-area">
-  <input id="msg" placeholder="Type a message..." disabled />
-  <button id="sendBtn" onclick="send()" disabled>Send</button>
-</div>
-<div class="status" id="status">Connecting...</div>
 
 <!-- Profile Modal -->
 <div id="profileModal" class="modal">
@@ -151,14 +674,21 @@
 const chat = document.getElementById('chat');
 const msg = document.getElementById('msg');
 const statusEl = document.getElementById('status');
-const countEl = document.getElementById('count');
 const currentUserEl = document.getElementById('current-user');
 const pfpAvatarEl = document.getElementById('pfp-avatar');
+const onlineCountEl = document.getElementById('online-count');
+const currentChatNameEl = document.getElementById('current-chat-name');
+const currentChatAvatarEl = document.getElementById('current-chat-avatar');
+const privateChatsList = document.getElementById('privateChatsList');
+const onlineUsersList = document.getElementById('onlineUsersList');
 
 let currentUsername = 'Anonymous';
 let currentPfp = '';
 let typingTimeout = null;
 let ws = null;
+let currentChatId = 'main';
+let onlineUsers = [];
+let privateChats = [];
 
 // Check auth
 const token = localStorage.getItem('token');
@@ -191,6 +721,8 @@ function connectWS() {
       msg.disabled = false;
       document.getElementById('sendBtn').disabled = false;
       loadMessages();
+      loadOnlineUsers();
+      loadPrivateChats();
     };
 
     ws.onmessage = e => {
@@ -200,17 +732,22 @@ function connectWS() {
         const info = data.data;
 
         if (type === 'message') {
-          addMessage(info.username, info.text, info.timestamp);
+          addMessage(info.username, info.text, info.timestamp, info.pfp);
+          updateChatPreview(info.username, info.text, info.timestamp);
         } else if (type === 'user_typing') {
           showTyping(info.username);
         } else if (type === 'user_joined') {
           addEvent(`${info.username} joined the chat`);
-          countEl.textContent = info.count;
+          updateOnlineCount(info.count);
+          addOnlineUser(info.username, info.pfp);
         } else if (type === 'user_left') {
           addEvent(`${info.username} left the chat`);
-          countEl.textContent = info.count;
+          updateOnlineCount(info.count);
+          removeOnlineUser(info.username);
         } else if (type === 'username_changed') {
           addEvent(`${info.old} is now ${info.new}`);
+        } else if (type === 'private_message') {
+          handlePrivateMessage(info);
         }
       } catch (err) {
         console.error('Error parsing message:', err);
@@ -237,10 +774,22 @@ function connectWS() {
   }
 }
 
-function addMessage(user, text, timestamp) {
+function addMessage(user, text, timestamp, userPfp = '') {
   const li = document.createElement('li');
-  const time = timestamp ? new Date(timestamp).toLocaleTimeString() : '';
-  li.innerHTML = `<span class="username">${user}:</span> ${text} <span class="timestamp">${time}</span>`;
+  const time = timestamp ? new Date(timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : '';
+  const pfpHTML = userPfp ? `<div class="message-avatar" style="background-image: url('${userPfp}')"></div>` : '<div class="message-avatar"></div>';
+  const smallPfp = userPfp ? `<span class="username-pfp" style="background-image: url('${userPfp}')"></span>` : '';
+  
+  li.innerHTML = `
+    ${pfpHTML}
+    <div class="message-content">
+      <div class="message-header">
+        <span class="username">${smallPfp}${user}</span>
+        <span class="timestamp">${time}</span>
+      </div>
+      <div>${text}</div>
+    </div>
+  `;
   chat.appendChild(li);
   chat.scrollTop = chat.scrollHeight;
 }
@@ -259,7 +808,7 @@ function showTyping(user) {
   
   const li = document.createElement('li');
   li.className = 'typing';
-  li.textContent = `${user} is typing...`;
+  li.innerHTML = `<div class="message-avatar"></div><div class="message-content">${user} is typing...</div>`;
   chat.appendChild(li);
   chat.scrollTop = chat.scrollHeight;
   
@@ -274,13 +823,145 @@ async function loadMessages() {
       return;
     }
     const data = await res.json();
+    chat.innerHTML = '';
     data.forEach(m => {
-      addMessage(m.username, m.text, '');
+      addMessage(m.username, m.text, '', m.pfp);
     });
     chat.scrollTop = chat.scrollHeight;
   } catch (e) {
     console.error('Error loading messages:', e);
   }
+}
+
+async function loadOnlineUsers() {
+  try {
+    const res = await fetch('/online-users');
+    if (!res.ok) return;
+    const users = await res.json();
+    onlineUsers = users;
+    updateOnlineUsersList();
+    updateOnlineCount(users.length);
+  } catch (e) {
+    console.error('Error loading online users:', e);
+  }
+}
+
+async function loadPrivateChats() {
+  try {
+    const res = await fetch('/private-chats');
+    if (!res.ok) return;
+    const chats = await res.json();
+    privateChats = chats;
+    updatePrivateChatsList();
+  } catch (e) {
+    console.error('Error loading private chats:', e);
+  }
+}
+
+function updateOnlineUsersList() {
+  onlineUsersList.innerHTML = '';
+  onlineUsers.forEach(user => {
+    const item = document.createElement('div');
+    item.className = 'chat-item';
+    item.onclick = () => startPrivateChat(user.username);
+    item.innerHTML = `
+      <div class="chat-item-avatar" style="background-image: url('${user.pfp || ''}')"></div>
+      <div class="chat-item-info">
+        <div class="chat-item-header">
+          <div class="chat-item-name">${user.username}</div>
+          <div class="chat-item-time">Online</div>
+        </div>
+        <div class="chat-item-preview">Click to start chat</div>
+      </div>
+    `;
+    onlineUsersList.appendChild(item);
+  });
+}
+
+function updatePrivateChatsList() {
+  privateChatsList.innerHTML = '';
+  privateChats.forEach(chat => {
+    const item = document.createElement('div');
+    item.className = 'chat-item';
+    item.onclick = () => switchToPrivateChat(chat.with_user_id, chat.with_username);
+    item.innerHTML = `
+      <div class="chat-item-avatar" style="background-image: url('${chat.with_pfp || ''}')"></div>
+      <div class="chat-item-info">
+        <div class="chat-item-header">
+          <div class="chat-item-name">${chat.with_username}</div>
+          <div class="chat-item-time">${formatTime(chat.last_message_time)}</div>
+        </div>
+        <div class="chat-item-preview">${chat.last_message || 'No messages yet'}</div>
+      </div>
+      ${chat.unread_count > 0 ? `<div class="unread-badge">${chat.unread_count}</div>` : ''}
+    `;
+    privateChatsList.appendChild(item);
+  });
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return '';
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diff = now - date;
+  
+  if (diff < 86400000) {
+    return date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+  } else if (diff < 604800000) {
+    return date.toLocaleDateString([], {weekday: 'short'});
+  } else {
+    return date.toLocaleDateString([], {month: 'short', day: 'numeric'});
+  }
+}
+
+function updateChatPreview(username, text, timestamp) {
+  if (currentChatId === 'main') {
+    document.getElementById('main-chat-preview').textContent = `${username}: ${text}`;
+    document.getElementById('main-chat-time').textContent = formatTime(timestamp);
+  }
+}
+
+function updateOnlineCount(count) {
+  onlineCountEl.textContent = count;
+}
+
+function addOnlineUser(username, pfp) {
+  if (!onlineUsers.find(u => u.username === username)) {
+    onlineUsers.push({username, pfp});
+    updateOnlineUsersList();
+  }
+}
+
+function removeOnlineUser(username) {
+  onlineUsers = onlineUsers.filter(u => u.username !== username);
+  updateOnlineUsersList();
+}
+
+function startPrivateChat(username) {
+  openPrivateChat(username);
+}
+
+function switchToChat(chatId, chatName) {
+  currentChatId = chatId;
+  currentChatNameEl.textContent = chatName;
+  document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+  event.target.closest('.chat-item').classList.add('active');
+  
+  if (chatId === 'main') {
+    loadMessages();
+    document.getElementById('current-chat-status').textContent = `Public Room • ${onlineUsers.length} online`;
+  }
+}
+
+function switchToPrivateChat(userId, username) {
+  currentChatId = `private_${userId}`;
+  currentChatNameEl.textContent = username || 'Private Chat';
+  document.querySelectorAll('.chat-item').forEach(item => item.classList.remove('active'));
+  event.target.closest('.chat-item').classList.add('active');
+  
+  chat.innerHTML = '';
+  addEvent(`Private chat with ${username || 'user'}`);
+  document.getElementById('current-chat-status').textContent = 'Private Chat • Secure';
 }
 
 function send() {
@@ -294,7 +975,13 @@ function send() {
     return;
   }
   
-  ws.send(JSON.stringify({ type: 'message', content: msg.value }));
+  const messageData = {
+    type: currentChatId.startsWith('private_') ? 'private_message' : 'message',
+    content: msg.value,
+    chat_id: currentChatId
+  };
+  
+  ws.send(JSON.stringify(messageData));
   msg.value = '';
   
   if (typingTimeout) clearTimeout(typingTimeout);
@@ -313,7 +1000,6 @@ msg.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send();
 });
 
-// Profile management
 let currentTab = 'profile';
 
 function switchTab(tab) {
@@ -321,7 +1007,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.modal-tab').forEach(el => el.classList.remove('active'));
   document.getElementById(tab).classList.add('active');
-  document.event.target.classList.add('active');
+  event.target.classList.add('active');
   
   const btn = document.getElementById('actionBtn');
   if (tab === 'profile') {
@@ -341,7 +1027,7 @@ function openProfileModal() {
   if (currentPfp) {
     preview.style.backgroundImage = `url('${currentPfp}')`;
   } else {
-    preview.style.background = '#ddd';
+    preview.style.background = '#333';
   }
 }
 
@@ -387,7 +1073,10 @@ async function searchUsers() {
     results.forEach(user => {
       const item = document.createElement('div');
       item.className = 'search-result-item';
-      item.innerHTML = `<span>${user.username}</span>`;
+      item.innerHTML = `
+        <div class="search-result-avatar" style="background-image: url('${user.pfp || ''}')"></div>
+        <div>${user.username}</div>
+      `;
       item.onclick = () => openPrivateChat(user.username);
       resultsEl.appendChild(item);
     });
@@ -408,10 +1097,48 @@ async function openPrivateChat(withUser) {
       return;
     }
     const data = await res.json();
+    
+    privateChats.push({
+      with_user_id: data.user_id,
+      with_username: withUser,
+      with_pfp: data.pfp,
+      last_message: 'Chat started',
+      last_message_time: new Date().toISOString(),
+      unread_count: 0
+    });
+    
+    updatePrivateChatsList();
     closeProfileModal();
-    alert(`Opened private chat with ${withUser}! (Coming soon - feature under development)`);
+    alert(`Private chat started with ${withUser}!`);
   } catch (e) {
     alert('Error: ' + e.message);
+  }
+}
+
+function handlePrivateMessage(info) {
+  let chat = privateChats.find(c => c.with_user_id === info.from_user_id);
+  if (!chat) {
+    chat = {
+      with_user_id: info.from_user_id,
+      with_username: info.from_username,
+      with_pfp: info.from_pfp,
+      last_message: info.text,
+      last_message_time: info.timestamp,
+      unread_count: 1
+    };
+    privateChats.push(chat);
+  } else {
+    chat.last_message = info.text;
+    chat.last_message_time = info.timestamp;
+    chat.unread_count = (chat.unread_count || 0) + 1;
+  }
+  
+  updatePrivateChatsList();
+  
+  if (currentChatId === `private_${info.from_user_id}`) {
+    addMessage(info.from_username, info.text, info.timestamp, info.from_pfp);
+    chat.unread_count = 0;
+    updatePrivateChatsList();
   }
 }
 
@@ -456,12 +1183,10 @@ async function doSaveProfile(newUsername, pfpData) {
     
     const data = await res.json();
     
-    // Update local storage
     localStorage.setItem('token', data.access_token);
     localStorage.setItem('username', data.username);
     if (data.pfp) localStorage.setItem('pfp', data.pfp);
     
-    // Update UI
     currentUsername = data.username;
     currentPfp = data.pfp || '';
     currentUserEl.textContent = currentUsername;
@@ -521,12 +1246,47 @@ async function changePassword() {
 function logout() {
   localStorage.removeItem('token');
   localStorage.removeItem('username');
+  localStorage.removeItem('pfp');
   if (ws) ws.close();
   window.location.href = '/login.html';
 }
 
-// Connect on load
+function initSampleData() {
+  document.getElementById('main-chat-avatar').style.backgroundImage = 'url("https://cdn-icons-png.flaticon.com/512/2455/2455300.png")';
+  currentChatAvatarEl.style.backgroundImage = 'url("https://cdn-icons-png.flaticon.com/512/2455/2455300.png")';
+  
+  setTimeout(() => {
+    const sampleUsers = [
+      { username: 'ShadowUser', pfp: 'https://i.pravatar.cc/150?img=1' },
+      { username: 'DarkKnight', pfp: 'https://i.pravatar.cc/150?img=3' },
+      { username: 'Midnight', pfp: 'https://i.pravatar.cc/150?img=4' },
+      { username: 'Phantom', pfp: 'https://i.pravatar.cc/150?img=5' },
+      { username: 'Viper', pfp: 'https://i.pravatar.cc/150?img=6' }
+    ];
+    
+    sampleUsers.forEach(user => {
+      const item = document.createElement('div');
+      item.className = 'chat-item';
+      item.onclick = () => startPrivateChat(user.username);
+      item.innerHTML = `
+        <div class="chat-item-avatar" style="background-image: url('${user.pfp}')"></div>
+        <div class="chat-item-info">
+          <div class="chat-item-header">
+            <div class="chat-item-name">${user.username}</div>
+            <div class="chat-item-time">Online</div>
+          </div>
+          <div class="chat-item-preview">Click to start chat</div>
+        </div>
+      `;
+      onlineUsersList.appendChild(item);
+    });
+    
+    updateOnlineCount(sampleUsers.length + 1);
+  }, 1000);
+}
+
 connectWS();
+initSampleData();
 </script>
 </body>
 </html>
